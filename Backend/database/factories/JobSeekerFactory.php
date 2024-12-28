@@ -19,12 +19,12 @@ class JobSeekerFactory extends Factory
         $password = bcrypt('password'); 
 
         return [
+            'role' => 'jobseeker', 
             'name' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
-            'password' => $password,
-            'confirmPassword' => $password,
+            'password' => bcrypt('password'), 
             'phoneNumber' => $this->faker->phoneNumber(),
-            'age' => $this->faker->numberBetween(25, 40), 
+            'age' => $this->faker->numberBetween(25, 60),
             'sex' => $this->faker->randomElement(['male', 'female']),
             'status' => $this->faker->randomElement(['Single', 'Married']),
             'address' => $this->faker->streetAddress(),

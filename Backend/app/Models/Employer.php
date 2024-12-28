@@ -15,6 +15,7 @@ class Employer extends Model
      * @var array
      */
     protected $fillable = [
+        'role',
         'name',
         'email',
         'password',

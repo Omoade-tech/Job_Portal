@@ -8,6 +8,21 @@ const apiClient = axios.create({
 });
 
 export default {
+    // Authentication Endpoints
+    register(data) {
+        // Register a new user
+        return apiClient.post('/register', data);
+    },
+    login(data) {
+        // Log in the user
+        return apiClient.post('/login', data);
+    },
+    logout() {
+        // Log out the user
+        return apiClient.post('/logout');
+    },
+
+    // Job Portal Endpoints
     getJobPortals(params = {}) {
         return apiClient.get('/job_portals', { params });
     },
@@ -15,8 +30,6 @@ export default {
         return apiClient.get(`/job_portals/${id}`);
     },
     createJobPortal(data) {
-        // Create a new job portal entry with the required fields
-        // For file upload (e.g., companyLogo), use FormData
         const formData = new FormData();
         for (const key in data) {
             formData.append(key, data[key]);
@@ -29,7 +42,6 @@ export default {
     },
     updateJobPortal(id, data) {
         // Update an existing job portal entry by ID
-        // Use FormData for file upload
         const formData = new FormData();
         for (const key in data) {
             formData.append(key, data[key]);
@@ -43,7 +55,10 @@ export default {
     deleteJobPortal(id) {
         return apiClient.delete(`/job_portals/${id}`);
     },
+
+    // Job Apply Endpoints
+    getAllJobApplies() {
+        // Fetch all job applies
+        return apiClient.get('/job_applies');
+    },
 };
-
-
-//http://localhost:8000/api/job_portals

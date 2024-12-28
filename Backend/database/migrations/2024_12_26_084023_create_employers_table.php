@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('employers', function (Blueprint $table) {
             $table->id();
+            $table->string('role'); 
             $table->string('name'); 
             $table->string('email')->unique(); 
             $table->string('password'); 
-            $table->string('confirmPassword');  // Added confirmPassword column
             $table->string('phoneNumber')->nullable(); 
             $table->string('companyName')->nullable(); 
             $table->integer('age')->nullable(); 
