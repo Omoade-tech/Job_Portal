@@ -49,7 +49,7 @@
             <div class="mb-3">
               <label for="salary" class="form-label">Salary</label>
               <input
-                type="number"
+                type="text"
                 id="salary"
                 v-model="salary"
                 class="form-control"
@@ -84,6 +84,7 @@
                 <option value="fulltime">Full-Time</option>
                 <option value="remote">Remote</option>
                 <option value="parttime">Part-Time</option>
+                <option value="parttime">Contract</option>
               </select>
             </div>
   

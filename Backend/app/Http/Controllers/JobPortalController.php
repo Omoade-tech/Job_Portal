@@ -50,7 +50,7 @@ class JobPortalController extends Controller
                 'companyName' => 'required|string|max:255',
                 'contract' => 'required|string|in:fulltime,remote,parttime',
                 'post' => 'required|string|max:100',
-                'salary' => 'required|numeric|min:0',
+                'salary' => ['required', 'regex:/^\$?\d{1,3}(,\d{3})*(\.\d{2})?$/'], // Validate salary format
                 'description' => 'required|string|min:10|max:1000',
                 'location' => 'required|string|max:255',
                 'responsibility' => 'required|string|min:10|max:1000',
@@ -84,7 +84,7 @@ class JobPortalController extends Controller
                 'companyName' => 'required|string|max:255',
                 'contract' => 'required|string|max:255',
                 'post' => 'required|string|max:100',
-                'salary' => 'required|integer|min:0',
+                'salary' => ['required', 'regex:/^\$?\d{1,3}(,\d{3})*(\.\d{2})?$/'], 
                 'description' => 'required|string|min:10|max:1000',
                 'location' => 'required|string|max:255',
                 'responsibility' => 'required|string|min:10|max:1000',

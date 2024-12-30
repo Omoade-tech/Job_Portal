@@ -9,6 +9,8 @@ import Logout from '@/views/Logout.vue'
 import AdminDashboard from '@/views/AdminDashboard.vue'
 import AddJob from '@/views/AddJob.vue'
 import JobDetails from '@/views/JobDetails.vue'
+import ViewJob from '@/views/ViewJob.vue'
+import EditJob from '@/views/EditJob.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,6 +39,16 @@ const router = createRouter({
       path: '/jobdetails',
       name: 'jobdetails',
       component: JobDetails,
+    },
+    {
+      path: '/viewjob/:id',
+      name: 'viewjob',
+      component: ViewJob,
+    },
+    {
+      path: '/editjob/:id',
+      name: 'editjob',
+      component: EditJob,
     },
     {
       path: '/employerdash',

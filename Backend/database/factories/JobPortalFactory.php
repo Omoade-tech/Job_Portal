@@ -30,7 +30,7 @@ class JobPortalFactory extends Factory
                 'Cloud Engineer',
                 'Full-Stack Developer',
             ]), 
-            'salary' => $this->faker->numberBetween(150000, 1500000), 
+            'salary' => '$' . number_format($this->faker->randomFloat(2, 150000, 1500000), 2), // Add $ and format as a decimal value
             'description' => $this->faker->paragraphs(3, true),
             'location' => $this->faker->city() . ', ' . $this->faker->state(), 
             'responsibility' => $this->faker->sentences(3, true), 
