@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('job_seekers', function (Blueprint $table) {
             $table->id();
-            $table->string('role'); 
+            $table->string('role')->default('job_seeker');
             $table->string('name'); 
             $table->string('email')->unique(); 
             $table->string('password'); 
-            $table->string('phoneNumber');
+            $table->string('phoneNumber')->nullable();
             $table->integer('age')->nullable(); 
             $table->enum('sex', ['male', 'female', 'other'])->nullable(); 
             $table->enum('status', ['Single', 'Married'])->nullable();

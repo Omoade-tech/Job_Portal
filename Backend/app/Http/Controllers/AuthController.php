@@ -7,156 +7,240 @@ use App\Models\Employer;
 use App\Models\JobSeeker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    // Register a new user (Admin, Employer, or JobSeeker)
     public function register(Request $request)
     {
-        // Validate input data using Laravel's built-in validation
-        $validated = $request->validate([
-            'role' => 'required|in:admin,employer,job_seeker',
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:admins,email|unique:employers,email|unique:job_seekers,email',
-            // The password field should match the 'confirmPassword' field
-            'password' => 'required|string|min:8|confirmed', 
-            'phoneNumber' => 'required|string|max:15',
-            'age' => 'required|integer|min:25',
-            'sex' => 'required|string|in:male,female',
-            'status' => 'required|stringin:single,married',
-            'address' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
-            'state' => 'required|string|max:255',
-            'country' => 'required|string|max:255',
-        ]);
+        try {
+            // Merge password confirmation field to standardize it for validation
+            $request->merge(['password_confirmation' => $request->confirmPassword]);
 
-        // Create user based on role
-        $user = null;
-        switch ($validated['role']) {
-            case 'admin':
-                $user = Admin::create([
+            // Validate the request
+            $validated = $request->validate([
+                'role' => 'required|in:admin,employer,job_seeker',
+                'name' => 'required|string|max:255',
+                'email' => [
+                    'required',
+                    'email',
+                    function ($attribute, $value, $fail) {
+                        if (
+                            Admin::where('email', $value)->exists() ||
+                            Employer::where('email', $value)->exists() ||
+                            JobSeeker::where('email', $value)->exists()
+                        ) {
+                            $fail('The email is already taken.');
+                        }
+                    },
+                ],
+                'password' => 'required|string|min:8|confirmed',
+                'phoneNumber' => 'required|string|max:15',
+                'age' => 'required|integer|min:25',
+                'sex' => 'required|string|in:male,female',
+                'status' => 'required|string|in:single,married',
+                'address' => 'required|string|max:255',
+                'city' => 'required|string|max:255',
+                'state' => 'required|string|max:255',
+                'country' => 'required|string|max:255',
+            ]);
+
+            // Create the user based on the validated role
+            $user = match ($validated['role']) {
+                'admin' => Admin::create([
                     'name' => $validated['name'],
                     'email' => $validated['email'],
                     'password' => Hash::make($validated['password']),
-                ]);
-                break;
-
-            case 'employer':
-                $user = Employer::create([
+                    'phone_number' => $validated['phoneNumber'],
+                    'age' => $validated['age'],
+                    'sex' => $validated['sex'],
+                    'status' => $validated['status'],
+                    'address' => $validated['address'],
+                    'city' => $validated['city'],
+                    'state' => $validated['state'],
+                    'country' => $validated['country'],
+                ]),
+                'employer' => Employer::create([
                     'name' => $validated['name'],
                     'email' => $validated['email'],
                     'password' => Hash::make($validated['password']),
-                ]);
-                break;
-
-            case 'job_seeker':
-                $user = JobSeeker::create([
+                    'phone_number' => $validated['phoneNumber'],
+                    'age' => $validated['age'],
+                    'sex' => $validated['sex'],
+                    'status' => $validated['status'],
+                    'address' => $validated['address'],
+                    'city' => $validated['city'],
+                    'state' => $validated['state'],
+                    'country' => $validated['country'],
+                ]),
+                'job_seeker' => JobSeeker::create([
                     'name' => $validated['name'],
                     'email' => $validated['email'],
                     'password' => Hash::make($validated['password']),
-                ]);
-                break;
+                    'phone_number' => $validated['phoneNumber'],
+                    'age' => $validated['age'],
+                    'sex' => $validated['sex'],
+                    'status' => $validated['status'],
+                    'address' => $validated['address'],
+                    'city' => $validated['city'],
+                    'state' => $validated['state'],
+                    'country' => $validated['country'],
+                ]),
+                default => null,
+            };
 
-            default:
-                return response()->json(['success' => false, 'message' => 'Invalid role'], 400);
+            // Create token for the new user
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => ucfirst($validated['role']) . ' registered successfully.',
+                'data' => $user,
+                'token' => $token
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::error('Registration error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Registration failed. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => ucfirst($validated['role']) . ' registered successfully.',
-            'data' => $user,
-        ], 201);
     }
 
-    // Login a user (Admin, Employer, or JobSeeker)
     public function login(Request $request)
     {
-        // Validate input data
-        $validated = $request->validate([
-            'role' => 'required|in:admin,employer,job_seeker',
-            'email' => 'required|email',
-            'password' => 'required|string|min:8',
-        ]);
+        try {
+            // Validate request
+            $validated = $request->validate([
+                'email' => 'required|email',
+                'password' => 'required|string',
+            ]);
 
-        $role = $validated['role'];
-        $user = null;
+            Log::info('Login attempt for email: ' . $validated['email']);
+            
+            $email = strtolower($validated['email']);
+            
+            // Find user
+            $user = Admin::where('email', $email)->first()
+                ?? Employer::where('email', $email)->first()
+                ?? JobSeeker::where('email', $email)->first();
 
-        // Find user by role
-        switch ($role) {
-            case 'admin':
-                $user = Admin::where('email', $validated['email'])->first();
-                break;
+            if (!$user) {
+                Log::info('No user found with email: ' . $email);
+                throw ValidationException::withMessages([
+                    'email' => ['The provided credentials are incorrect.'],
+                ]);
+            }
 
-            case 'employer':
-                $user = Employer::where('email', $validated['email'])->first();
-                break;
+            if (!Hash::check($validated['password'], $user->password)) {
+                Log::info('Invalid password for user: ' . $email);
+                throw ValidationException::withMessages([
+                    'password' => ['The provided credentials are incorrect.'],
+                ]);
+            }
 
-            case 'job_seeker':
-                $user = JobSeeker::where('email', $validated['email'])->first();
-                break;
+            // Determine user role
+            $role = match (get_class($user)) {
+                Admin::class => 'admin',
+                Employer::class => 'employer',
+                JobSeeker::class => 'job_seeker',
+                default => throw new \Exception('Unknown user type'),
+            };
 
-            default:
-                return response()->json(['success' => false, 'message' => 'Invalid role'], 400);
+            // Create new token
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            Log::info('User logged in successfully: ' . $email);
+
+            return response()->json([
+                'success' => true,
+                'message' => ucfirst($role) . ' logged in successfully.',
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $role,
+                ],
+                'token' => $token
+            ], 200);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Login error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Login failed. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        // Check if user exists and password matches
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
-            return response()->json(['success' => false, 'message' => 'Invalid credentials'], 401);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => ucfirst($role) . ' logged in successfully.',
-            'data' => $user,
-        ], 200);
     }
 
-    // Logout the authenticated user
-    public function logout()
+    public function logout(Request $request)
     {
-        return response()->json([
-            'success' => true,
-            'message' => 'User logged out successfully.',
-        ], 200);
+        try {
+            // Revoke all tokens...
+            $request->user()->tokens()->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully logged out.'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Logout error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Logout failed. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    // Get all registered users by role
     public function getUsersByRole(Request $request)
     {
-        // Validate role input
-        $validated = $request->validate([
-            'role' => 'required|in:admin,employer,job_seeker',
-        ]);
+        try {
+            $validated = $request->validate([
+                'role' => 'required|in:admin,employer,job_seeker',
+            ]);
 
-        $role = $validated['role'];
-        $users = null;
+            $roleModels = [
+                'admin' => Admin::class,
+                'employer' => Employer::class,
+                'job_seeker' => JobSeeker::class,
+            ];
 
-        // Fetch users based on role
-        switch ($role) {
-            case 'admin':
-                $users = Admin::all();
-                break;
+            $model = $roleModels[$validated['role']];
+            $users = $model::all();
 
-            case 'employer':
-                $users = Employer::all();
-                break;
+            if ($users->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "No {$validated['role']}s found",
+                    'data' => []
+                ], 200);
+            }
 
-            case 'job_seeker':
-                $users = JobSeeker::all();
-                break;
+            return response()->json([
+                'success' => true,
+                'message' => ucfirst($validated['role']) . ' list retrieved successfully.',
+                'data' => $users,
+            ], 200);
 
-            default:
-                return response()->json(['success' => false, 'message' => 'Invalid role'], 400);
+        } catch (\Exception $e) {
+            Log::error('GetUsersByRole error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve users. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        if ($users->isEmpty()) {
-            return response()->json(['success' => true, 'message' => "No $role found"], 200);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => ucfirst($role) . ' list retrieved successfully.',
-            'data' => $users,
-        ], 200);
     }
 }

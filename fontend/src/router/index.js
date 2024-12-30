@@ -1,5 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import Home from '../views/Home.vue'
+import JobListing from '@/views/JobListing.vue'
+import ApplyJob from '@/views/ApplyJob.vue'
+import EmployerDashboard from '@/views/EmployerDashboard.vue'
+import Login from '@/views/Login.vue'
+import Signup from '@/views/Signup.vue'
+import Logout from '@/views/Logout.vue'
+import AdminDashboard from '@/views/AdminDashboard.vue'
+import AddJob from '@/views/AddJob.vue'
+import JobDetails from '@/views/JobDetails.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,15 +16,58 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: Home,
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
+      path: '/joblisting',
+      name: 'joblisting',
+      component: JobListing,
+    },
+    {
+      path: '/applyjob',
+      name: 'applyjob',
+      component: ApplyJob,
+    },
+    {
+      path: '/addjob',
+      name: 'addjob',
+      component: AddJob,
+    },
+    {
+      path: '/jobdetails',
+      name: 'jobdetails',
+      component: JobDetails,
+    },
+    {
+      path: '/employerdash',
+      name: 'employerdash',
+      component: EmployerDashboard,
+    },
+    {
+      path: '/admindashboard',
+      name: 'admindashboard',
+      component: AdminDashboard,
+    },
+     {
+      path: '/employerdasboard',
+      name: 'employerdasboard',
+      component: EmployerDashboard,
+    },
+    
+    {
+      path: '/login',
+      name: 'login',
+      component: Login,
+    },
+    {
+      path: '/signup',
+      name: 'signup',
+      component: Signup,
+    },
+    {
+      path: '/logout',
+      name: 'logout',
+      component: Logout,
     },
   ],
 })
