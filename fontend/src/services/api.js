@@ -1,23 +1,17 @@
 import axios from 'axios';
 
-// Create axios instance with default config
 const apiClient = axios.create({
   baseURL: 'http://localhost:8000/api',
   headers: {
-    'Content-Type': 'application/json',
     Accept: 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   },
-  withCredentials: true,
+  withCredentials: true, // Include cookies with requests
 });
 
-// Add request interceptor to handle errors and add auth token if exists
+// Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => {
@@ -26,34 +20,11 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Add response interceptor for handling errors
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      const status = error.response.status;
-      const message = error.response.data.message || 'An error occurred.';
-      switch (status) {
-        case 401:
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          console.error('Unauthorized access. Redirecting to login...');
-          break;
-        case 403:
-          console.error('Access forbidden:', message);
-          break;
-        case 422:
-          console.error('Validation error:', error.response.data.errors);
-          break;
-        case 429:
-          console.error('Too many requests. Please try again later.');
-          break;
-        case 500:
-          console.error('Server error. Please try again later.');
-          break;
-        default:
-          console.error('API Error:', message);
-      }
+      handleErrorResponse(error.response);
     } else if (error.request) {
       console.error('No response received:', error.request);
     } else {
@@ -63,28 +34,46 @@ apiClient.interceptors.response.use(
   }
 );
 
+function handleErrorResponse(response) {
+  const status = response.status;
+  const message = response.data.message || 'An error occurred.';
+
+  switch (status) {
+    case 401:
+      console.error('Unauthorized:', message);
+      break;
+    case 403:
+      console.error('Access forbidden:', message);
+      break;
+    case 422:
+      console.error('Validation error:', response.data.errors);
+      break;
+    case 429:
+      console.error('Too many requests. Please try again later.');
+      break;
+    case 500:
+      console.error('Server error. Please try again later.');
+      break;
+    default:
+      console.error('API Error:', message);
+  }
+}
+
 export default {
-  register(data) {
-    return apiClient.post('/register', data);
+  register(formData) {
+    return apiClient.post('/register', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   },
 
   login(data) {
-    return apiClient.post('/login', data).then((response) => {
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-      }
-      if (response.data.data) {
-        localStorage.setItem('user', JSON.stringify(response.data.data));
-      }
-      return response;
-    });
+    return apiClient.post('/login', data);
   },
 
   logout() {
-    return apiClient.post('/logout').finally(() => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-    });
+    return apiClient.post('/logout');
   },
 
   // Job Portal Endpoints
@@ -108,17 +97,20 @@ export default {
     return apiClient.delete(`/job_portals/${id}`);
   },
 
-  getAllJobApplies() {
+  getAllJobApplications() {
     return apiClient.get('/job_applies');
   },
 
-  isLoggedIn() {
-    return !!localStorage.getItem('token');
+  getJobApplicationById(id) {
+    return apiClient.get(`/job_applies/${id}`);
   },
 
-  getCurrentUser() {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+  createJobApplication(data) {
+    return this.sendFormData('/job_applies', data);
+  },
+
+  updateJobApplication(id, data) {
+    return this.sendFormData(`/job_applies/${id}?_method=PUT`, data);
   },
 
   sendFormData(url, data, method = 'POST') {
@@ -138,5 +130,5 @@ export default {
         'Content-Type': 'multipart/form-data',
       },
     });
-  }
+  },
 };

@@ -17,7 +17,7 @@ class AuthController extends Controller
         try {
             // Merge password confirmation field to standardize it for validation
             $request->merge(['password_confirmation' => $request->confirmPassword]);
-
+    
             // Validate the request
             $validated = $request->validate([
                 'role' => 'required|in:admin,employer,job_seeker',
@@ -36,8 +36,9 @@ class AuthController extends Controller
                     },
                 ],
                 'password' => 'required|string|min:8|confirmed',
+                'password_confirmation' => 'required|string|min:8',
                 'phoneNumber' => 'required|string|max:15',
-                'age' => 'required|integer|min:25',
+                'age' => 'required|integer|min:18|max:100',
                 'sex' => 'required|string|in:male,female',
                 'status' => 'required|string|in:single,married',
                 'address' => 'required|string|max:255',
@@ -45,7 +46,7 @@ class AuthController extends Controller
                 'state' => 'required|string|max:255',
                 'country' => 'required|string|max:255',
             ]);
-
+    
             // Create the user based on the validated role
             $user = match ($validated['role']) {
                 'admin' => Admin::create([
@@ -89,17 +90,30 @@ class AuthController extends Controller
                 ]),
                 default => null,
             };
-
+    
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create user. Please try again.'
+                ], 500);
+            }
+    
             // Create token for the new user
-            $token = $user->createToken('auth_token')->plainTextToken;
-
+            // $token = $user->createToken('auth_token')->plainTextToken;
+    
             return response()->json([
                 'success' => true,
                 'message' => ucfirst($validated['role']) . ' registered successfully.',
                 'data' => $user,
-                'token' => $token
+                // 'token' => $token
             ], 201);
-
+    
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             Log::error('Registration error: ' . $e->getMessage());
             return response()->json([
@@ -109,6 +123,7 @@ class AuthController extends Controller
             ], 500);
         }
     }
+    
 
     public function login(Request $request)
     {
@@ -135,44 +150,24 @@ class AuthController extends Controller
                 ]);
             }
 
+            // Verify password
             if (!Hash::check($validated['password'], $user->password)) {
-                Log::info('Invalid password for user: ' . $email);
+                Log::info('Invalid password for email: ' . $email);
                 throw ValidationException::withMessages([
                     'password' => ['The provided credentials are incorrect.'],
                 ]);
             }
 
-            // Determine user role
-            $role = match (get_class($user)) {
-                Admin::class => 'admin',
-                Employer::class => 'employer',
-                JobSeeker::class => 'job_seeker',
-                default => throw new \Exception('Unknown user type'),
-            };
-
-            // Create new token
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            Log::info('User logged in successfully: ' . $email);
+            // Generate token
+            // $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
                 'success' => true,
-                'message' => ucfirst($role) . ' logged in successfully.',
-                'data' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $role,
-                ],
-                'token' => $token
+                'message' => 'Login successful.',
+                'data' => $user,
+                // 'token' => $token
             ], 200);
 
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid credentials',
-                'errors' => $e->errors(),
-            ], 422);
         } catch (\Exception $e) {
             Log::error('Login error: ' . $e->getMessage());
             return response()->json([
@@ -182,6 +177,8 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+
 
     public function logout(Request $request)
     {

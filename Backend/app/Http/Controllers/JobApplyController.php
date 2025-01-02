@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobApply;
+use App\Models\reference;
 use Illuminate\Http\Request;
 
 class JobApplyController extends Controller
@@ -11,7 +12,7 @@ class JobApplyController extends Controller
     public function index()
     {
         try {
-            $jobsapply = JobApply::with('reference')->latest()->paginate(15);
+            $jobsapply = JobApply::with('reference')->latest()->get();
             return response()->json(['success' => true, 'data' => $jobsapply], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -36,8 +37,8 @@ class JobApplyController extends Controller
                 'email' => 'required|email|unique:job_applies,email',
                 'phoneNumber' => 'required|string|max:20',
                 'address' => 'required|string|min:20|max:100',
-                'coverLetter' => 'required|string|min:20|max:100',
-                'resume' => 'required|file|mimes:pdf|max:2048', // Max size 2MB
+                'coverLetter' => 'required|string|min:20',
+                'resume' => 'required|file|mimes:pdf|max:2048',
                 'reference_id' => 'required|exists:references,id',
             ]);
 
@@ -64,7 +65,7 @@ class JobApplyController extends Controller
                 'email' => 'required|email|unique:job_applies,email,' . $id,
                 'phoneNumber' => 'required|string|max:20',
                 'address' => 'required|string|min:20|max:100',
-                'coverLetter' => 'required|string|min:20|max:100',
+                'coverLetter' => 'required|string|min:20',
                 'resume' => 'required|file|mimes:pdf|max:2048', 
                 'reference_id' => 'required|exists:references,id',
             ]);

@@ -120,7 +120,7 @@ export default {
       form: {
         role: "",
         name: "",
-        email: "", // Added email field
+        email: "", 
         password: "",
         confirmPassword: "",
         phoneNumber: "",

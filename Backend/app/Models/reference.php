@@ -17,8 +17,8 @@ class reference extends Model
     use HasFactory;
 
 
-    public function jobPortal()
+    public function jobApply()
     {
-        return $this->hasMany(jobPortal::class);
+        return $this->hasMany(JobApply::class);
     }
 }
