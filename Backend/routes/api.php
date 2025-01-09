@@ -10,7 +10,11 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+Route::get('/job_portals/search', [JobPortalController::class, 'search']);
+
+
 Route::apiResource('job_portals', JobPortalController::class);
+
 
 Route::apiResource('job_applies', JobApplyController::class);
 

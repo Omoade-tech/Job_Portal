@@ -6,7 +6,7 @@ const apiClient = axios.create({
     Accept: 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   },
-  withCredentials: true, // Include cookies with requests
+  withCredentials: true,
 });
 
 // Request interceptor
@@ -60,6 +60,7 @@ function handleErrorResponse(response) {
 }
 
 export default {
+  // Auth endpoints
   register(formData) {
     return apiClient.post('/register', formData, {
       headers: {
@@ -97,6 +98,7 @@ export default {
     return apiClient.delete(`/job_portals/${id}`);
   },
 
+  // Job Applications Endpoints
   getAllJobApplications() {
     return apiClient.get('/job_applies');
   },
@@ -113,6 +115,23 @@ export default {
     return this.sendFormData(`/job_applies/${id}?_method=PUT`, data);
   },
 
+  // Updated Search Functionality
+  searchJobPortals(searchParams) {
+    // Convert the search parameters to query parameters
+    const params = {};
+    
+    // If filterType is 'query', use it as a general search
+    if (searchParams.filterType === 'query') {
+      params.query = searchParams.query;
+    } else {
+      // Otherwise, use the specific filter type
+      params[searchParams.filterType] = searchParams.query;
+    }
+
+    return apiClient.get('/job_portals/search', { params });
+  },
+
+  // Utility function for handling form data
   sendFormData(url, data, method = 'POST') {
     const formData = data instanceof FormData ? data : new FormData();
     if (!(data instanceof FormData)) {

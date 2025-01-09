@@ -23,9 +23,9 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             EmployerSeeder::class,
             JobPortalSeeder::class,
-            ReferenceSeeder::class,
-            JobApplySeeder::class,
             JobSeekerSeeder::class,
+            JobApplySeeder::class,
+
            
         ]);
     }

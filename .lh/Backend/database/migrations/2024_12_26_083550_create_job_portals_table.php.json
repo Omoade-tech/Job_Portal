@@ -1,0 +1,18 @@
+{
+    "sourceFile": "Backend/database/migrations/2024_12_26_083550_create_job_portals_table.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1736415008165,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1736415008165,
+            "name": "Commit-0",
+            "content": "<?php\r\n\r\nuse Illuminate\\Database\\Migrations\\Migration;\r\nuse Illuminate\\Database\\Schema\\Blueprint;\r\nuse Illuminate\\Support\\Facades\\Schema;\r\n\r\nreturn new class extends Migration\r\n{\r\n    /**\r\n     * Run the migrations.\r\n     */\r\n    public function up(): void\r\n    {\r\n        Schema::create('job_portals', function (Blueprint $table) {\r\n            $table->id();\r\n            $table->string('companyLogo')->nullable();\r\n            $table->string('companyName'); \r\n            $table->string('contract'); \r\n            $table->string('post'); \r\n            $table->string('salary')->nullable(); \r\n            $table->text('description')->nullable();\r\n            $table->string('location');\r\n            $table->text('responsibility')->nullable(); \r\n            $table->timestamps(); \r\n        });\r\n    }\r\n\r\n    /**\r\n     * Reverse the migrations.\r\n     */\r\n    public function down(): void\r\n    {\r\n        Schema::dropIfExists('job_portals');\r\n    }\r\n};\r\n"
+        }
+    ]
+}

@@ -2,7 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\reference;
+use App\Models\JobPortal;
+use App\Models\JobSeeker;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,14 +18,11 @@ class JobApplyFactory extends Factory
      */
     public function definition(): array
     {
-        return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(), 
-            'phoneNumber' => fake()->phoneNumber(),
-            'address' => fake()->address(), 
+        return [ 
             'coverLetter' => fake()->paragraph(3), 
             'resume' => fake()->url(), 
-            'reference_id' => reference::inRandomOrder()->first()->id,
+            'job_portals_id' => JobPortal::inRandomOrder()->first()->id, 
+            'job_seekers_id' => JobSeeker::inRandomOrder()->first()->id, 
         ];
     }
 }

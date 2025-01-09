@@ -1,0 +1,54 @@
+{
+    "sourceFile": "Backend/database/migrations/2024_12_26_083744_create_job_applies_table.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 9,
+            "patches": [
+                {
+                    "date": 1736414605672,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1736414612176,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -14,9 +14,9 @@\n         Schema::create('job_applies', function (Blueprint $table) {\r\n             $table->id(); \r\n             $table->text('coverLetter')->nullable(); \r\n             $table->string('resume')->nullable(); \r\n-            $table->foreignId('job_id')->nullable()->constrained('JobPotal')->onDelete('cascade'); \r\n+            $table->foreignId('job_portal_id')->nullable()->constrained('JobPotal')->onDelete('cascade'); \r\n             $table->timestamps();\r\n         });\r\n     }\r\n \r\n"
+                },
+                {
+                    "date": 1736414629424,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -14,9 +14,9 @@\n         Schema::create('job_applies', function (Blueprint $table) {\r\n             $table->id(); \r\n             $table->text('coverLetter')->nullable(); \r\n             $table->string('resume')->nullable(); \r\n-            $table->foreignId('job_portal_id')->nullable()->constrained('JobPotal')->onDelete('cascade'); \r\n+            $table->foreignId('job_portal_id')->nullable()->constrained('job_portal')->onDelete('cascade'); \r\n             $table->timestamps();\r\n         });\r\n     }\r\n \r\n"
+                },
+                {
+                    "date": 1736415239594,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -14,9 +14,11 @@\n         Schema::create('job_applies', function (Blueprint $table) {\r\n             $table->id(); \r\n             $table->text('coverLetter')->nullable(); \r\n             $table->string('resume')->nullable(); \r\n-            $table->foreignId('job_portal_id')->nullable()->constrained('job_portal')->onDelete('cascade'); \r\n+            $table->foreignId('job_portal_id')->nullable()\r\n+                  ->constrained('job_portals') // Ensure the table name matches 'job_portals'\r\n+                  ->onDelete('cascade'); \r\n             $table->timestamps();\r\n         });\r\n     }\r\n \r\n"
+                },
+                {
+                    "date": 1736415251306,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,9 +15,9 @@\n             $table->id(); \r\n             $table->text('coverLetter')->nullable(); \r\n             $table->string('resume')->nullable(); \r\n             $table->foreignId('job_portal_id')->nullable()\r\n-                  ->constrained('job_portals') // Ensure the table name matches 'job_portals'\r\n+                  ->constrained('job_portals') \r\n                   ->onDelete('cascade'); \r\n             $table->timestamps();\r\n         });\r\n     }\r\n"
+                },
+                {
+                    "date": 1736416355432,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -14,9 +14,9 @@\n         Schema::create('job_applies', function (Blueprint $table) {\r\n             $table->id(); \r\n             $table->text('coverLetter')->nullable(); \r\n             $table->string('resume')->nullable(); \r\n-            $table->foreignId('job_portal_id')->nullable()\r\n+            $table->foreignId('job_portals_id')->nullable()\r\n                   ->constrained('job_portals') \r\n                   ->onDelete('cascade'); \r\n             $table->timestamps();\r\n         });\r\n"
+                },
+                {
+                    "date": 1736424894688,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -17,8 +17,9 @@\n             $table->string('resume')->nullable(); \r\n             $table->foreignId('job_portals_id')->nullable()\r\n                   ->constrained('job_portals') \r\n                   ->onDelete('cascade'); \r\n+                  \r\n             $table->timestamps();\r\n         });\r\n     }\r\n \r\n"
+                },
+                {
+                    "date": 1736424902437,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -17,9 +17,11 @@\n             $table->string('resume')->nullable(); \r\n             $table->foreignId('job_portals_id')->nullable()\r\n                   ->constrained('job_portals') \r\n                   ->onDelete('cascade'); \r\n-                  \r\n+         $table->foreignId('job_portals_id')->nullable()\r\n+                  ->constrained('job_portals') \r\n+                  ->onDelete('cascade'); \r\n             $table->timestamps();\r\n         });\r\n     }\r\n \r\n"
+                },
+                {
+                    "date": 1736424915999,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -17,9 +17,9 @@\n             $table->string('resume')->nullable(); \r\n             $table->foreignId('job_portals_id')->nullable()\r\n                   ->constrained('job_portals') \r\n                   ->onDelete('cascade'); \r\n-         $table->foreignId('job_portals_id')->nullable()\r\n+            $table->foreignId('job_seeker_id')->nullable()\r\n                   ->constrained('job_portals') \r\n                   ->onDelete('cascade'); \r\n             $table->timestamps();\r\n         });\r\n"
+                },
+                {
+                    "date": 1736424927623,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -17,10 +17,10 @@\n             $table->string('resume')->nullable(); \r\n             $table->foreignId('job_portals_id')->nullable()\r\n                   ->constrained('job_portals') \r\n                   ->onDelete('cascade'); \r\n-            $table->foreignId('job_seeker_id')->nullable()\r\n-                  ->constrained('job_portals') \r\n+            $table->foreignId('job_seekers_id')->nullable()\r\n+                  ->constrained('job_seeker') \r\n                   ->onDelete('cascade'); \r\n             $table->timestamps();\r\n         });\r\n     }\r\n"
+                }
+            ],
+            "date": 1736414605672,
+            "name": "Commit-0",
+            "content": "<?php\r\n\r\nuse Illuminate\\Database\\Migrations\\Migration;\r\nuse Illuminate\\Database\\Schema\\Blueprint;\r\nuse Illuminate\\Support\\Facades\\Schema;\r\n\r\nreturn new class extends Migration\r\n{\r\n    /**\r\n     * Run the migrations.\r\n     */\r\n    public function up(): void\r\n    {\r\n        Schema::create('job_applies', function (Blueprint $table) {\r\n            $table->id(); \r\n            $table->text('coverLetter')->nullable(); \r\n            $table->string('resume')->nullable(); \r\n            $table->foreignId('job_id')->nullable()->constrained('JobPotal')->onDelete('cascade'); \r\n            $table->timestamps();\r\n        });\r\n    }\r\n\r\n    /**\r\n     * Reverse the migrations.\r\n     */\r\n    public function down(): void\r\n    {\r\n        Schema::dropIfExists('job_applies');\r\n    }\r\n};\r\n"
+        }
+    ]
+}

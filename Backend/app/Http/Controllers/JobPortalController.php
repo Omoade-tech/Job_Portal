@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\JobPortal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
 
 class JobPortalController extends Controller
 {
@@ -15,12 +17,10 @@ class JobPortalController extends Controller
     public function index()
     {
         try {
-            // Fetch job portals ordered by 'created_at' in descending order
             $jobportals = JobPortal::latest()->get();
-
             return response()->json(['success' => true, 'data' => $jobportals], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to fetch job portals.'], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to fetch job portals.', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -31,44 +31,42 @@ class JobPortalController extends Controller
     {
         try {
             $jobportal = JobPortal::findOrFail($id);
-
             return response()->json(['success' => true, 'data' => $jobportal], 200);
-        } catch (\Exception $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'JobPortal not found.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'An error occurred while fetching the job portal.', 'error' => $e->getMessage()], 500);
         }
     }
 
     /**
-     * Store a newly created job portal in the database.
+     * Store a new job portal.
      */
     public function store(Request $request)
     {
         try {
-            // Validate the incoming data
             $validatedData = $request->validate([
-                'companyLogo' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048', // Limit file size to 2MB
+                'companyLogo' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
                 'companyName' => 'required|string|max:255',
                 'contract' => 'required|string|in:fulltime,remote,parttime',
                 'post' => 'required|string|max:100',
-                'salary' => ['required', 'regex:/^\$?\d{1,3}(,\d{3})*(\.\d{2})?$/'], // Validate salary format
+                'salary' => ['required', 'regex:/^\$?\d{1,3}(,\d{3})*(\.\d{2})?$/'],
                 'description' => 'required|string|min:10|max:1000',
                 'location' => 'required|string|max:255',
                 'responsibility' => 'required|string|min:10|max:1000',
             ]);
 
-            // Handle file upload for companyLogo
             if ($request->hasFile('companyLogo')) {
                 $validatedData['companyLogo'] = $request->file('companyLogo')->store('logos', 'public');
             }
 
-            // Create the job portal record
             $jobportal = JobPortal::create($validatedData);
 
             return response()->json(['success' => true, 'data' => $jobportal], 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json(['success' => false, 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to create JobPortal.'], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to create JobPortal.', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -78,13 +76,12 @@ class JobPortalController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            // Validate the incoming data
             $validatedData = $request->validate([
                 'companyLogo' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
                 'companyName' => 'required|string|max:255',
                 'contract' => 'required|string|max:255',
                 'post' => 'required|string|max:100',
-                'salary' => ['required', 'regex:/^\$?\d{1,3}(,\d{3})*(\.\d{2})?$/'], 
+                'salary' => ['required', 'regex:/^\$?\d{1,3}(,\d{3})*(\.\d{2})?$/'],
                 'description' => 'required|string|min:10|max:1000',
                 'location' => 'required|string|max:255',
                 'responsibility' => 'required|string|min:10|max:1000',
@@ -92,23 +89,22 @@ class JobPortalController extends Controller
 
             $jobportal = JobPortal::findOrFail($id);
 
-            // Handle file upload for companyLogo
             if ($request->hasFile('companyLogo')) {
-                // Delete the old logo if it exists
                 if ($jobportal->companyLogo) {
                     Storage::disk('public')->delete($jobportal->companyLogo);
                 }
                 $validatedData['companyLogo'] = $request->file('companyLogo')->store('logos', 'public');
             }
 
-            // Update the job portal record
             $jobportal->update($validatedData);
 
             return response()->json(['success' => true, 'message' => 'JobPortal updated successfully.', 'data' => $jobportal], 200);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'JobPortal not found.'], 404);
+        } catch (ValidationException $e) {
             return response()->json(['success' => false, 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to update JobPortal.'], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to update JobPortal.', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -120,7 +116,6 @@ class JobPortalController extends Controller
         try {
             $jobportal = JobPortal::findOrFail($id);
 
-            // Delete the associated logo file if it exists
             if ($jobportal->companyLogo) {
                 Storage::disk('public')->delete($jobportal->companyLogo);
             }
@@ -128,8 +123,63 @@ class JobPortalController extends Controller
             $jobportal->delete();
 
             return response()->json(['success' => true, 'message' => 'JobPortal deleted successfully.'], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'JobPortal not found.'], 404);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to delete JobPortal.'], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to delete JobPortal.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Search for job portals based on filters.
+     */
+    public function search(Request $request)
+    {
+        try {
+            $validatedData = $request->validate([
+                'query' => 'nullable|string|max:255',
+                'companyName' => 'nullable|string|max:255',
+                'post' => 'nullable|string|max:100',
+                'location' => 'nullable|string|max:255',
+                'contract' => 'nullable|string|in:fulltime,remote,parttime',
+            ]);
+
+            $query = JobPortal::query();
+
+            if (!empty($validatedData['query'])) {
+                $query->where(function ($q) use ($validatedData) {
+                    $q->where('companyName', 'LIKE', '%' . $validatedData['query'] . '%')
+                        ->orWhere('post', 'LIKE', '%' . $validatedData['query'] . '%')
+                        ->orWhere('location', 'LIKE', '%' . $validatedData['query'] . '%')
+                        ->orWhere('contract', 'LIKE', '%' . $validatedData['query'] . '%')
+                        ->orWhere('salary', 'LIKE', '%' . $validatedData['query'] . '%')
+                        ->orWhere('description', 'LIKE', '%' . $validatedData['query'] . '%');
+                });
+            }
+
+            if (!empty($validatedData['companyName'])) {
+                $query->where('companyName', 'LIKE', '%' . $validatedData['companyName'] . '%');
+            }
+
+            if (!empty($validatedData['post'])) {
+                $query->where('post', 'LIKE', '%' . $validatedData['post'] . '%');
+            }
+
+            if (!empty($validatedData['location'])) {
+                $query->where('location', 'LIKE', '%' . $validatedData['location'] . '%');
+            }
+
+            if (!empty($validatedData['contract'])) {
+                $query->where('contract', $validatedData['contract']);
+            }
+
+            $jobportals = $query->latest()->get();
+
+            return response()->json(['success' => true, 'data' => $jobportals], 200);
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to search job portals.', 'error' => $e->getMessage()], 500);
         }
     }
 }

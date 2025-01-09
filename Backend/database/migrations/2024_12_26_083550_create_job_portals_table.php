@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('companyName'); 
             $table->string('contract'); 
             $table->string('post'); 
-            $table->string('salary')->nullable(); // Updated to string for flexibility
+            $table->string('salary')->nullable(); 
             $table->text('description')->nullable();
             $table->string('location');
             $table->text('responsibility')->nullable(); 

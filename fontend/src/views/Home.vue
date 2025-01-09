@@ -13,8 +13,7 @@
               The home for Developers searching for job opportunities around the world.
               There are thousands of jobs here.
             </p>
-            <!-- Find Job Button -->
-            <!-- <a href="/jobs" class="btn btn-success mt-3 text-center">Find Job</a> -->
+            <Search />
           </div>
         </div>
       </div>

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobApply;
-use App\Models\reference;
 use Illuminate\Http\Request;
 
 class JobApplyController extends Controller
@@ -12,7 +11,7 @@ class JobApplyController extends Controller
     public function index()
     {
         try {
-            $jobsapply = JobApply::with('reference')->latest()->get();
+            $jobsapply = JobApply::with('jobPortal', 'jobSeeker')->latest()->get(); 
             return response()->json(['success' => true, 'data' => $jobsapply], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -22,7 +21,8 @@ class JobApplyController extends Controller
     public function show($id)
     {
         try {
-            $jobapply = JobApply::with('reference')->findOrFail($id);
+            
+            $jobapply = JobApply::with('jobPortal', 'jobSeeker')->findOrFail($id); 
             return response()->json(['success' => true, 'data' => $jobapply], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Job application not found.'], 404);
@@ -33,19 +33,19 @@ class JobApplyController extends Controller
     {
         try {
             $validatedData = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:job_applies,email',
-                'phoneNumber' => 'required|string|max:20',
-                'address' => 'required|string|min:20|max:100',
                 'coverLetter' => 'required|string|min:20',
                 'resume' => 'required|file|mimes:pdf|max:2048',
-                'reference_id' => 'required|exists:references,id',
+                'job_portals_id' => 'required|exists:job_portals,id',
+                'jobseeker_id' => 'required|exists:job_seekers,id', 
             ]);
 
             // Handle file upload
             if ($request->hasFile('resume')) {
                 $validatedData['resume'] = $request->file('resume')->store('resumes', 'public');
             }
+
+            // Add jobseeker_id to the validated data
+            $validatedData['jobseeker_id'] = $request->jobseeker_id;
 
             $jobapply = JobApply::create($validatedData);
 
@@ -61,13 +61,10 @@ class JobApplyController extends Controller
     {
         try {
             $validatedData = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:job_applies,email,' . $id,
-                'phoneNumber' => 'required|string|max:20',
-                'address' => 'required|string|min:20|max:100',
                 'coverLetter' => 'required|string|min:20',
-                'resume' => 'required|file|mimes:pdf|max:2048', 
-                'reference_id' => 'required|exists:references,id',
+                'resume' => 'required|file|mimes:pdf|max:2048',
+                'job_portals_id' => 'required|exists:job_portals,id',
+                'jobseeker_id' => 'required|exists:job_seekers,id', 
             ]);
 
             $jobapply = JobApply::findOrFail($id);
@@ -76,6 +73,9 @@ class JobApplyController extends Controller
             if ($request->hasFile('resume')) {
                 $validatedData['resume'] = $request->file('resume')->store('resumes', 'public');
             }
+
+            // Add jobseeker_id to the validated data
+            $validatedData['jobseeker_id'] = $request->jobseeker_id;
 
             $jobapply->update($validatedData);
 

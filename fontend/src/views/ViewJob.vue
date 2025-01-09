@@ -64,8 +64,8 @@
         this.loading = true;
         this.error = null;
         try {
-          const response = await api.getJobPortalById(id); // Fetch job details by ID from the API
-          this.job = response.data.data; // Access the job data
+          const response = await api.getJobPortalById(id); 
+          this.job = response.data.data; 
         } catch (error) {
           this.error = "Failed to load job details. Please try again.";
         } finally {
@@ -77,10 +77,10 @@
           this.deleting = true;
           this.error = null;
           try {
-            await api.deleteJobPortal(id); // Call the API to delete the job
+            await api.deleteJobPortal(id); 
             alert("Job deleted successfully!");
             const router = useRouter();
-            router.push("/joblisting"); // Redirect to the job list after deletion
+            router.push("/joblisting");
           } catch (error) {
             this.error = "Failed to delete the job. Please try again.";
           } finally {
@@ -91,7 +91,7 @@
     },
     mounted() {
       const route = useRoute();
-      const jobId = route.params.id; // Get job ID from route parameters
+      const jobId = route.params.id; 
       if (jobId) {
         this.fetchJobDetails(jobId);
       } else {
@@ -105,7 +105,7 @@
       onBeforeRouteUpdate((to, from, next) => {
         const jobId = to.params.id;
         if (jobId) {
-          this.fetchJobDetails(jobId); // Fetch job details for the new ID
+          this.fetchJobDetails(jobId); 
         }
         next();
       });
