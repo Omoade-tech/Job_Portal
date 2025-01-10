@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 2,
+            "activePatchIndex": 7,
             "patches": [
                 {
                     "date": 1736344050653,
@@ -16,6 +16,26 @@
                 {
                     "date": 1736344811672,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -9,8 +9,10 @@\n Route::get('/user', function (Request $request) {\n     return $request->user();\n })->middleware('auth:sanctum');\n \n+\n+\n Route::apiResource('job_portals', JobPortalController::class);\n \n \n Route::apiResource('job_applies', JobApplyController::class);\n"
+                },
+                {
+                    "date": 1736500609336,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -9,8 +9,9 @@\n Route::get('/user', function (Request $request) {\n     return $request->user();\n })->middleware('auth:sanctum');\n \n+Route::get('/job_portals/search', [JobPortalController::class, 'search']);\n \n \n Route::apiResource('job_portals', JobPortalController::class);\n \n@@ -18,9 +19,9 @@\n Route::apiResource('job_applies', JobApplyController::class);\n \n Route::post('/register', [AuthController::class, 'register']);\n \n-Route::post('/login', [AuthController::class, 'login']);\n+Route::get('/login', [AuthController::class, 'login']);\n \n Route::post('/logout', [AuthController::class, 'logout']);\n \n // Route to get all users by role\n"
+                },
+                {
+                    "date": 1736500635158,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -19,9 +19,9 @@\n Route::apiResource('job_applies', JobApplyController::class);\n \n Route::post('/register', [AuthController::class, 'register']);\n \n-Route::get('/login', [AuthController::class, 'login']);\n+Route::p('/login', [AuthController::class, 'login']);\n \n Route::post('/logout', [AuthController::class, 'logout']);\n \n // Route to get all users by role\n"
+                },
+                {
+                    "date": 1736500781403,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -19,9 +19,9 @@\n Route::apiResource('job_applies', JobApplyController::class);\n \n Route::post('/register', [AuthController::class, 'register']);\n \n-Route::p('/login', [AuthController::class, 'login']);\n+Route::post('/login', [AuthController::class, 'login']);\n \n Route::post('/logout', [AuthController::class, 'logout']);\n \n // Route to get all users by role\n"
+                },
+                {
+                    "date": 1736512132099,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -21,8 +21,24 @@\n Route::post('/register', [AuthController::class, 'register']);\n \n Route::post('/login', [AuthController::class, 'login']);\n \n+// ...\n+\n+class AuthController extends Controller\n+{\n+    public function login(Request $request)\n+    {\n+        echo 'Received API request...';\n+        echo 'API request headers: ';\n+        print_r($request->headers());\n+        echo 'API request body: ';\n+        print_r($request->all());\n+\n+        // ...\n+    }\n+}\n+\n Route::post('/logout', [AuthController::class, 'logout']);\n \n // Route to get all users by role\n Route::get('/users', [AuthController::class, 'getUsersByRole']);\n"
+                },
+                {
+                    "date": 1736512173366,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -21,24 +21,8 @@\n Route::post('/register', [AuthController::class, 'register']);\n \n Route::post('/login', [AuthController::class, 'login']);\n \n-// ...\n-\n-class AuthController extends Controller\n-{\n-    public function login(Request $request)\n-    {\n-        echo 'Received API request...';\n-        echo 'API request headers: ';\n-        print_r($request->headers());\n-        echo 'API request body: ';\n-        print_r($request->all());\n-\n-        // ...\n-    }\n-}\n-\n Route::post('/logout', [AuthController::class, 'logout']);\n \n // Route to get all users by role\n Route::get('/users', [AuthController::class, 'getUsersByRole']);\n"
                 }
             ],
             "date": 1736344050653,

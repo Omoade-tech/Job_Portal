@@ -81,6 +81,7 @@
           {{ isLoading ? 'Logging in...' : 'Login' }}
         </button>
 
+        <!-- Register Link -->
         <div class="text-center">
           <span class="text-muted">Don't have an account? </span>
           <router-link to="/signup" class="text-primary text-decoration-none">

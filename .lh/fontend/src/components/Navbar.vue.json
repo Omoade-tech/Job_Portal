@@ -1,0 +1,18 @@
+{
+    "sourceFile": "fontend/src/components/Navbar.vue",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1736513038311,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1736513038311,
+            "name": "Commit-0",
+            "content": "<template>\r\n    <div class=\"nav\">\r\n     <nav class=\"navbar navbar-expand-lg navbar-light bg-light  w-100\">\r\n       <div class=\"container-fluid p-0\">\r\n         <!-- Logo -->\r\n         <router-link to=\"/\" class=\"navbar-brand fw-bold px-3\" href=\"#\">JBL</router-link>\r\n   \r\n         <!-- Toggle button for mobile view -->\r\n         <button\r\n           class=\"navbar-toggler\"\r\n           type=\"button\"\r\n           data-bs-toggle=\"collapse\"\r\n           data-bs-target=\"#navbarNav\"\r\n           aria-controls=\"navbarNav\"\r\n           aria-expanded=\"false\"\r\n           aria-label=\"Toggle navigation\"\r\n         >\r\n           <span class=\"navbar-toggler-icon\"></span>\r\n         </button>\r\n   \r\n         <!-- Navbar Links -->\r\n         <div class=\"collapse navbar-collapse\" id=\"navbarNav\">\r\n           <!-- Centered Links -->\r\n           <ul class=\"navbar-nav mx-auto\">\r\n             <li class=\"nav-item\">\r\n               <RouterLink to=\"/joblisting\" class=\"nav-link\">Job Listing</RouterLink>\r\n             </li>\r\n\r\n\r\n             <li class=\"nav-item\">\r\n              <RouterLink to=\"/addjob\" class=\"nav-link\">Add job</RouterLink>\r\n             </li>\r\n             <li class=\"nav-item\">\r\n              <RouterLink to=\"/jobdetails\" class=\"nav-link\">Job Details</RouterLink>\r\n             </li>\r\n           </ul>\r\n   \r\n           <!-- Right-aligned Links -->\r\n           <ul class=\"navbar-nav\">\r\n             <li class=\"nav-item\">\r\n              <RouterLink to=\"/login\" class=\"nav-link\">Login</RouterLink>\r\n             </li>\r\n             <li class=\"nav-item\">\r\n              <RouterLink to=\"/signup\" class=\"nav-link\">signup</RouterLink>\r\n             </li>\r\n             <li class=\"nav-item\">\r\n              <RouterLink to=\"/login\" class=\"nav-link\">Logout</RouterLink>\r\n             </li>\r\n           </ul>\r\n         </div>\r\n       </div>\r\n     </nav>\r\n   </div>\r\n   \r\n   \r\n   </template>\r\n   \r\n   <script>\r\n   \r\n   </script>\r\n   \r\n   <style scoped>\r\n   .nav{\r\n    height: 60px; \r\n   }\r\n   \r\n   </style>"
+        }
+    ]
+}

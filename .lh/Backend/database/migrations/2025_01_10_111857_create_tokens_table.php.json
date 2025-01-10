@@ -1,0 +1,66 @@
+{
+    "sourceFile": "Backend/database/migrations/2025_01_10_111857_create_tokens_table.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 12,
+            "patches": [
+                {
+                    "date": 1736508016214,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1736508816917,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -9,9 +9,9 @@\n     public function up()\r\n     {\r\n         Schema::create('tokens', function (Blueprint $table) {\r\n             $table->id();\r\n-            $table->foreignId('user_id')->constrained()->onDelete('cascade');\r\n+            $table->foreignId('_id')->constrained()->onDelete('cascade');\r\n             $table->string('name');\r\n             $table->string('token', 64)->unique();\r\n             $table->text('abilities')->nullable();\r\n             $table->timestamps();\r\n"
+                },
+                {
+                    "date": 1736508823956,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -9,9 +9,9 @@\n     public function up()\r\n     {\r\n         Schema::create('tokens', function (Blueprint $table) {\r\n             $table->id();\r\n-            $table->foreignId('_id')->constrained()->onDelete('cascade');\r\n+            $table->foreignId('job_seeker_id')->constrained()->onDelete('cascade');\r\n             $table->string('name');\r\n             $table->string('token', 64)->unique();\r\n             $table->text('abilities')->nullable();\r\n             $table->timestamps();\r\n"
+                },
+                {
+                    "date": 1736509505162,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -19,7 +19,7 @@\n     }\r\n \r\n     public function down()\r\n     {\r\n-        Schema::dropIfExists('tokens');\r\n+        Schema::dropIfExists('Tokens');\r\n     }\r\n }\r\n"
+                },
+                {
+                    "date": 1736509590437,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,8 +7,9 @@\n class CreateTokensTable extends Migration\r\n {\r\n     public function up()\r\n     {\r\n+        \r\n         Schema::create('tokens', function (Blueprint $table) {\r\n             $table->id();\r\n             $table->foreignId('job_seeker_id')->constrained()->onDelete('cascade');\r\n             $table->string('name');\r\n"
+                },
+                {
+                    "date": 1736509597213,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,9 +7,9 @@\n class CreateTokensTable extends Migration\r\n {\r\n     public function up()\r\n     {\r\n-        \r\n+        Schema\r\n         Schema::create('tokens', function (Blueprint $table) {\r\n             $table->id();\r\n             $table->foreignId('job_seeker_id')->constrained()->onDelete('cascade');\r\n             $table->string('name');\r\n"
+                },
+                {
+                    "date": 1736509604159,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,9 +7,9 @@\n class CreateTokensTable extends Migration\r\n {\r\n     public function up()\r\n     {\r\n-        Schema\r\n+        Schema::dr\r\n         Schema::create('tokens', function (Blueprint $table) {\r\n             $table->id();\r\n             $table->foreignId('job_seeker_id')->constrained()->onDelete('cascade');\r\n             $table->string('name');\r\n"
+                },
+                {
+                    "date": 1736509610940,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,9 +7,9 @@\n class CreateTokensTable extends Migration\r\n {\r\n     public function up()\r\n     {\r\n-        Schema::dr\r\n+        Schema::dropIfExists()\r\n         Schema::create('tokens', function (Blueprint $table) {\r\n             $table->id();\r\n             $table->foreignId('job_seeker_id')->constrained()->onDelete('cascade');\r\n             $table->string('name');\r\n"
+                },
+                {
+                    "date": 1736509618434,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,9 +7,9 @@\n class CreateTokensTable extends Migration\r\n {\r\n     public function up()\r\n     {\r\n-        Schema::dropIfExists()\r\n+        Schema::dropIfExists('Tokens')\r\n         Schema::create('tokens', function (Blueprint $table) {\r\n             $table->id();\r\n             $table->foreignId('job_seeker_id')->constrained()->onDelete('cascade');\r\n             $table->string('name');\r\n"
+                },
+                {
+                    "date": 1736509625921,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,9 +7,10 @@\n class CreateTokensTable extends Migration\r\n {\r\n     public function up()\r\n     {\r\n-        Schema::dropIfExists('Tokens')\r\n+        Schema::dropIfExists('Tokens');\r\n+        \r\n         Schema::create('tokens', function (Blueprint $table) {\r\n             $table->id();\r\n             $table->foreignId('job_seeker_id')->constrained()->onDelete('cascade');\r\n             $table->string('name');\r\n"
+                },
+                {
+                    "date": 1736509655110,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -3,14 +3,14 @@\n use Illuminate\\Database\\Migrations\\Migration;\r\n use Illuminate\\Database\\Schema\\Blueprint;\r\n use Illuminate\\Support\\Facades\\Schema;\r\n \r\n-class CreateTokensTable extends Migration\r\n+class TokensTable extends Migration\r\n {\r\n     public function up()\r\n     {\r\n         Schema::dropIfExists('Tokens');\r\n-        \r\n+\r\n         Schema::create('tokens', function (Blueprint $table) {\r\n             $table->id();\r\n             $table->foreignId('job_seeker_id')->constrained()->onDelete('cascade');\r\n             $table->string('name');\r\n"
+                },
+                {
+                    "date": 1736509660239,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -3,9 +3,9 @@\n use Illuminate\\Database\\Migrations\\Migration;\r\n use Illuminate\\Database\\Schema\\Blueprint;\r\n use Illuminate\\Support\\Facades\\Schema;\r\n \r\n-class TokensTable extends Migration\r\n+class UpTokensTable extends Migration\r\n {\r\n     public function up()\r\n     {\r\n         Schema::dropIfExists('Tokens');\r\n"
+                },
+                {
+                    "date": 1736509682467,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -3,14 +3,12 @@\n use Illuminate\\Database\\Migrations\\Migration;\r\n use Illuminate\\Database\\Schema\\Blueprint;\r\n use Illuminate\\Support\\Facades\\Schema;\r\n \r\n-class UpTokensTable extends Migration\r\n+class CreateTokensTable extends Migration\r\n {\r\n     public function up()\r\n     {\r\n-        Schema::dropIfExists('Tokens');\r\n-\r\n         Schema::create('tokens', function (Blueprint $table) {\r\n             $table->id();\r\n             $table->foreignId('job_seeker_id')->constrained()->onDelete('cascade');\r\n             $table->string('name');\r\n"
+                }
+            ],
+            "date": 1736508016214,
+            "name": "Commit-0",
+            "content": "<?php\r\n\r\nuse Illuminate\\Database\\Migrations\\Migration;\r\nuse Illuminate\\Database\\Schema\\Blueprint;\r\nuse Illuminate\\Support\\Facades\\Schema;\r\n\r\nclass CreateTokensTable extends Migration\r\n{\r\n    public function up()\r\n    {\r\n        Schema::create('tokens', function (Blueprint $table) {\r\n            $table->id();\r\n            $table->foreignId('user_id')->constrained()->onDelete('cascade');\r\n            $table->string('name');\r\n            $table->string('token', 64)->unique();\r\n            $table->text('abilities')->nullable();\r\n            $table->timestamps();\r\n        });\r\n    }\r\n\r\n    public function down()\r\n    {\r\n        Schema::dropIfExists('tokens');\r\n    }\r\n}\r\n"
+        }
+    ]
+}

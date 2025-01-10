@@ -1,0 +1,46 @@
+{
+    "sourceFile": "Backend/app/Models/Admin.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 7,
+            "patches": [
+                {
+                    "date": 1736493308333,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1736493315719,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -18,9 +18,8 @@\n         'role',\n         'name',\n         'email',\n         'password',\n-        'confirmPassword'\n         'phoneNumber',\n         'age',\n         'sex',\n         'status',\n"
+                },
+                {
+                    "date": 1736495375099,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -45,12 +45,9 @@\n      *\n      * @param string $value\n      * @return void\n      */\n-    public function setConfirmPasswordAttribute($value)\n-    {\n-        $this->attributes['confirmPassword'] = bcrypt($value);\n-    }\n+   \n \n     /**\n      * Get the full address of the admin.\n      *\n"
+                },
+                {
+                    "date": 1736495390204,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -64,12 +64,9 @@\n      * @param \\Illuminate\\Database\\Eloquent\\Builder $query\n      * @param string $email\n      * @return \\Illuminate\\Database\\Eloquent\\Builder\n      */\n-    public function scopeByEmail($query, $email)\n-    {\n-        return $query->where('email', $email);\n-    }\n+   \n \n     /**\n      * Scope to filter admins by status.\n      *\n"
+                },
+                {
+                    "date": 1736495405777,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -57,16 +57,10 @@\n     {\n         return \"{$this->address}, {$this->city}, {$this->state}, {$this->country}\";\n     }\n \n-    /**\n-     * Scope to filter admins by email.\n-     *\n-     * @param \\Illuminate\\Database\\Eloquent\\Builder $query\n-     * @param string $email\n-     * @return \\Illuminate\\Database\\Eloquent\\Builder\n-     */\n    \n+   \n \n     /**\n      * Scope to filter admins by status.\n      *\n@@ -97,21 +91,6 @@\n      * @param \\Illuminate\\Database\\Eloquent\\Builder $query\n      * @param string $state\n      * @return \\Illuminate\\Database\\Eloquent\\Builder\n      */\n-    public function scopeByState($query, $state)\n-    {\n-        return $query->where('state', $state);\n-    }\n-\n-    /**\n-     * Scope to filter admins by country.\n-     *\n-     * @param \\Illuminate\\Database\\Eloquent\\Builder $query\n-     * @param string $country\n-     * @return \\Illuminate\\Database\\Eloquent\\Builder\n-     */\n-    public function scopeByCountry($query, $country)\n-    {\n-        return $query->where('country', $country);\n-    }\n+    \n }\n"
+                },
+                {
+                    "date": 1736495411965,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -72,25 +72,8 @@\n     {\n         return $query->where('status', $status);\n     }\n \n-    /**\n-     * Scope to filter admins by city.\n-     *\n-     * @param \\Illuminate\\Database\\Eloquent\\Builder $query\n-     * @param string $city\n-     * @return \\Illuminate\\Database\\Eloquent\\Builder\n-     */\n-    public function scopeByCity($query, $city)\n-    {\n-        return $query->where('city', $city);\n-    }\n-\n-    /**\n-     * Scope to filter admins by state.\n-     *\n-     * @param \\Illuminate\\Database\\Eloquent\\Builder $query\n-     * @param string $state\n-     * @return \\Illuminate\\Database\\Eloquent\\Builder\n-     */\n+  return $query->where('city', $city);\n+  \n     \n }\n"
+                },
+                {
+                    "date": 1736495417537,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -67,13 +67,6 @@\n      * @param \\Illuminate\\Database\\Eloquent\\Builder $query\n      * @param string $status\n      * @return \\Illuminate\\Database\\Eloquent\\Builder\n      */\n-    public function scopeByStatus($query, $status)\n-    {\n-        return $query->where('status', $status);\n-    }\n-\n-  return $query->where('city', $city);\n-  \n     \n }\n"
+                },
+                {
+                    "date": 1736495425588,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -47,26 +47,10 @@\n      * @return void\n      */\n    \n \n-    /**\n-     * Get the full address of the admin.\n-     *\n-     * @return string\n-     */\n-    public function getFullAddressAttribute()\n-    {\n-        return \"{$this->address}, {$this->city}, {$this->state}, {$this->country}\";\n-    }\n-\n    \n    \n+   \n \n-    /**\n-     * Scope to filter admins by status.\n-     *\n-     * @param \\Illuminate\\Database\\Eloquent\\Builder $query\n-     * @param string $status\n-     * @return \\Illuminate\\Database\\Eloquent\\Builder\n-     */\n     \n }\n"
+                }
+            ],
+            "date": 1736493308333,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Factories\\HasFactory;\nuse Illuminate\\Database\\Eloquent\\Model;\n\nclass Admin extends Model\n{\n    use HasFactory;\n\n    /**\n     * The attributes that are mass assignable.\n     *\n     * @var array\n     */\n    protected $fillable = [\n        'role',\n        'name',\n        'email',\n        'password',\n        'confirmPassword'\n        'phoneNumber',\n        'age',\n        'sex',\n        'status',\n        'address',\n        'city',\n        'state',\n        'country',\n    ];\n\n    /**\n     * Automatically hash the password before saving.\n     *\n     * @param string $value\n     * @return void\n     */\n    public function setPasswordAttribute($value)\n    {\n        $this->attributes['password'] = bcrypt($value);\n    }\n\n    /**\n     * Automatically hash the confirmPassword before saving.\n     *\n     * @param string $value\n     * @return void\n     */\n    public function setConfirmPasswordAttribute($value)\n    {\n        $this->attributes['confirmPassword'] = bcrypt($value);\n    }\n\n    /**\n     * Get the full address of the admin.\n     *\n     * @return string\n     */\n    public function getFullAddressAttribute()\n    {\n        return \"{$this->address}, {$this->city}, {$this->state}, {$this->country}\";\n    }\n\n    /**\n     * Scope to filter admins by email.\n     *\n     * @param \\Illuminate\\Database\\Eloquent\\Builder $query\n     * @param string $email\n     * @return \\Illuminate\\Database\\Eloquent\\Builder\n     */\n    public function scopeByEmail($query, $email)\n    {\n        return $query->where('email', $email);\n    }\n\n    /**\n     * Scope to filter admins by status.\n     *\n     * @param \\Illuminate\\Database\\Eloquent\\Builder $query\n     * @param string $status\n     * @return \\Illuminate\\Database\\Eloquent\\Builder\n     */\n    public function scopeByStatus($query, $status)\n    {\n        return $query->where('status', $status);\n    }\n\n    /**\n     * Scope to filter admins by city.\n     *\n     * @param \\Illuminate\\Database\\Eloquent\\Builder $query\n     * @param string $city\n     * @return \\Illuminate\\Database\\Eloquent\\Builder\n     */\n    public function scopeByCity($query, $city)\n    {\n        return $query->where('city', $city);\n    }\n\n    /**\n     * Scope to filter admins by state.\n     *\n     * @param \\Illuminate\\Database\\Eloquent\\Builder $query\n     * @param string $state\n     * @return \\Illuminate\\Database\\Eloquent\\Builder\n     */\n    public function scopeByState($query, $state)\n    {\n        return $query->where('state', $state);\n    }\n\n    /**\n     * Scope to filter admins by country.\n     *\n     * @param \\Illuminate\\Database\\Eloquent\\Builder $query\n     * @param string $country\n     * @return \\Illuminate\\Database\\Eloquent\\Builder\n     */\n    public function scopeByCountry($query, $country)\n    {\n        return $query->where('country', $country);\n    }\n}\n"
+        }
+    ]
+}

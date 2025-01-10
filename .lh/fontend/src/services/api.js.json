@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 6,
+            "activePatchIndex": 9,
             "patches": [
                 {
                     "date": 1736342427553,
@@ -32,6 +32,18 @@
                 {
                     "date": 1736344543378,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -5,9 +5,9 @@\n   headers: {\r\n     Accept: 'application/json',\r\n     'X-Requested-With': 'XMLHttpRequest',\r\n   },\r\n-  withCredentials: true, // Include cookies with requests\r\n+  withCredentials: true,\r\n });\r\n \r\n // Request interceptor\r\n apiClient.interceptors.request.use(\r\n@@ -59,8 +59,9 @@\n   }\r\n }\r\n \r\n export default {\r\n+  // Auth endpoints\r\n   register(formData) {\r\n     return apiClient.post('/register', formData, {\r\n       headers: {\r\n         'Content-Type': 'multipart/form-data',\r\n@@ -96,8 +97,9 @@\n   deleteJobPortal(id) {\r\n     return apiClient.delete(`/job_portals/${id}`);\r\n   },\r\n \r\n+  // Job Applications Endpoints\r\n   getAllJobApplications() {\r\n     return apiClient.get('/job_applies');\r\n   },\r\n \r\n@@ -112,16 +114,25 @@\n   updateJobApplication(id, data) {\r\n     return this.sendFormData(`/job_applies/${id}?_method=PUT`, data);\r\n   },\r\n \r\n- searchJobPortals(searchParams) {\r\n-    // Using params to properly send query parameters\r\n-    return apiClient.get('/job_portals/search', { \r\n-        params: {\r\n-            [searchParams.filterType]: searchParams.query\r\n-        }\r\n-    });\r\n-}\r\n+  // Updated Search Functionality\r\n+  searchJobPortals(searchParams) {\r\n+    // Convert the search parameters to query parameters\r\n+    const params = {};\r\n+    \r\n+    // If filterType is 'query', use it as a general search\r\n+    if (searchParams.filterType === 'query') {\r\n+      params.query = searchParams.query;\r\n+    } else {\r\n+      // Otherwise, use the specific filter type\r\n+      params[searchParams.filterType] = searchParams.query;\r\n+    }\r\n+\r\n+    return apiClient.get('/job_portals/search', { params });\r\n+  },\r\n+\r\n+  // Utility function for handling form data\r\n   sendFormData(url, data, method = 'POST') {\r\n     const formData = data instanceof FormData ? data : new FormData();\r\n     if (!(data instanceof FormData)) {\r\n       for (const key in data) {\r\n@@ -138,5 +149,5 @@\n         'Content-Type': 'multipart/form-data',\r\n       },\r\n     });\r\n   },\r\n-};\r\n+};\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1736501621408,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -69,10 +69,14 @@\n     });\r\n   },\r\n \r\n   login(data) {\r\n-    return apiClient.post('/login', data);\r\n-  },\r\n+    return apiClient.post('/login', data, {\r\n+      headers: {\r\n+        'Content-Type': 'application/json'\r\n+      }\r\n+    });\r\n+  }\r\n \r\n   logout() {\r\n     return apiClient.post('/logout');\r\n   },\r\n"
+                },
+                {
+                    "date": 1736501658321,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -69,13 +69,17 @@\n     });\r\n   },\r\n \r\n   login(data) {\r\n-    return apiClient.post('/login', data, {\r\n-      headers: {\r\n-        'Content-Type': 'application/json'\r\n-      }\r\n-    });\r\n+    if (!data.email || !data.password) {\r\n+      throw new Error('Email and password are required');\r\n+    }\r\n+    const payload = {\r\n+      email: data.email,\r\n+      password: data.password,\r\n+      remember: data.remember\r\n+    };\r\n+    return apiClient.post('/login', payload);\r\n   }\r\n \r\n   logout() {\r\n     return apiClient.post('/logout');\r\n"
+                },
+                {
+                    "date": 1736511565501,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -75,12 +75,12 @@\n     }\r\n     const payload = {\r\n       email: data.email,\r\n       password: data.password,\r\n-      remember: data.remember\r\n+      remember: data.rememberMe\r\n     };\r\n     return apiClient.post('/login', payload);\r\n-  }\r\n+  },\r\n \r\n   logout() {\r\n     return apiClient.post('/logout');\r\n   },\r\n"
                 }
             ],
             "date": 1736342427553,

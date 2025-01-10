@@ -56,6 +56,11 @@ const router = createRouter({
       component: EmployerDashboard,
     },
     {
+      path: '/JobSeekerDashboard/:id',
+      name: 'JobSeekerDashboard',
+      component: () => import('@/views/JobSeekerDashboard.vue')
+    },
+    {
       path: '/admindashboard',
       name: 'admindashboard',
       component: AdminDashboard,

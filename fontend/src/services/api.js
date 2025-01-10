@@ -70,7 +70,15 @@ export default {
   },
 
   login(data) {
-    return apiClient.post('/login', data);
+    if (!data.email || !data.password) {
+      throw new Error('Email and password are required');
+    }
+    const payload = {
+      email: data.email,
+      password: data.password,
+      remember: data.rememberMe
+    };
+    return apiClient.post('/login', payload);
   },
 
   logout() {

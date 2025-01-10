@@ -44,7 +44,7 @@
               <RouterLink to="/signup" class="nav-link">signup</RouterLink>
              </li>
              <li class="nav-item">
-              <RouterLink to="/logout" class="nav-link">Logout</RouterLink>
+              <RouterLink to="/login" class="nav-link">Logout</RouterLink>
              </li>
            </ul>
          </div>

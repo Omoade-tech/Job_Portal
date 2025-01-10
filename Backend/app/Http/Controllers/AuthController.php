@@ -53,7 +53,7 @@ class AuthController extends Controller
                     'name' => $validated['name'],
                     'email' => $validated['email'],
                     'password' => Hash::make($validated['password']),
-                    'phone_number' => $validated['phoneNumber'],
+                    'phoneNumber' => $validated['phoneNumber'],
                     'age' => $validated['age'],
                     'sex' => $validated['sex'],
                     'status' => $validated['status'],
@@ -66,7 +66,7 @@ class AuthController extends Controller
                     'name' => $validated['name'],
                     'email' => $validated['email'],
                     'password' => Hash::make($validated['password']),
-                    'phone_number' => $validated['phoneNumber'],
+                    'phoneNumber' => $validated['phoneNumber'],
                     'age' => $validated['age'],
                     'sex' => $validated['sex'],
                     'status' => $validated['status'],
@@ -79,7 +79,7 @@ class AuthController extends Controller
                     'name' => $validated['name'],
                     'email' => $validated['email'],
                     'password' => Hash::make($validated['password']),
-                    'phone_number' => $validated['phoneNumber'],
+                    'phoneNumber' => $validated['phoneNumber'],
                     'age' => $validated['age'],
                     'sex' => $validated['sex'],
                     'status' => $validated['status'],
@@ -126,57 +126,55 @@ class AuthController extends Controller
     
 
     public function login(Request $request)
-    {
-        try {
-            // Validate request
-            $validated = $request->validate([
-                'email' => 'required|email',
-                'password' => 'required|string',
+{
+    try {
+        // Validate request
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        // Find user
+        $user = JobSeeker::where('email', $validated['email'])->first()
+            ?? Employer::where('email', $validated['email'])->first();
+
+        if (!$user) {
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
             ]);
-
-            Log::info('Login attempt for email: ' . $validated['email']);
-            
-            $email = strtolower($validated['email']);
-            
-            // Find user
-            $user = Admin::where('email', $email)->first()
-                ?? Employer::where('email', $email)->first()
-                ?? JobSeeker::where('email', $email)->first();
-
-            if (!$user) {
-                Log::info('No user found with email: ' . $email);
-                throw ValidationException::withMessages([
-                    'email' => ['The provided credentials are incorrect.'],
-                ]);
-            }
-
-            // Verify password
-            if (!Hash::check($validated['password'], $user->password)) {
-                Log::info('Invalid password for email: ' . $email);
-                throw ValidationException::withMessages([
-                    'password' => ['The provided credentials are incorrect.'],
-                ]);
-            }
-
-            // Generate token
-            // $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Login successful.',
-                'data' => $user,
-                // 'token' => $token
-            ], 200);
-
-        } catch (\Exception $e) {
-            Log::error('Login error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Login failed. Please try again.',
-                'error' => $e->getMessage()
-            ], 500);
         }
+
+        // Verify password
+        if (!Hash::check($validated['password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'password' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        // Generate token
+        $token = $user->createToken('auth_token');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login successful.',
+            'data' => $user,
+            'token' => $token->plainTextToken, // Access the plainTextToken property
+        ], 200);
+
+    } catch (ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed.',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Login failed. Please try again.',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
 
 

@@ -7,6 +7,8 @@
             <h3 class="text-center">Register</h3>
           </div>
           <div class="card-body">
+  
+       
             <form @submit.prevent="registerUser">
               <!-- Role -->
               <div class="mb-3">
@@ -18,6 +20,7 @@
                   <option value="job_seeker">Jobseeker</option>
                 </select>
               </div>
+              
 
               <!-- Name -->
               <div class="mb-3">
@@ -145,7 +148,7 @@ export default {
       try {
         const response = await api.register(this.form);
         alert("Registration successful!");
-        // console.log(response.data);
+        console.log(response.data);
         this.$router.push("/login");
       } catch (error) {
         console.error("Registration failed:", error.response.data);
