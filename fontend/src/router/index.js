@@ -50,24 +50,20 @@ const router = createRouter({
       name: 'editjob',
       component: EditJob,
     },
-    {
-      path: '/employerdash',
-      name: 'employerdash',
-      component: EmployerDashboard,
-    },
+
     {
       path: '/JobSeekerDashboard/:id',
       name: 'JobSeekerDashboard',
       component: () => import('@/views/JobSeekerDashboard.vue')
     },
     {
-      path: '/admindashboard',
-      name: 'admindashboard',
+      path: '/AdminDashboard',
+      name: 'AdminDashboard',
       component: AdminDashboard,
     },
      {
-      path: '/employerdasboard',
-      name: 'employerdasboard',
+      path: '/EmployerDashboard',
+      name: 'EmployerDashboard',
       component: EmployerDashboard,
     },
     

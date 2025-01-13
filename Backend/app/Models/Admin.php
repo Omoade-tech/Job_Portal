@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Sanctum\HasApiTokens; 
+// use App\Models\Token; 
 
 class Admin extends Model
 {
-    use HasFactory;
+    use HasApiTokens, HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -30,15 +32,12 @@ class Admin extends Model
     ];
 
     /**
-     * Automatically hash the password before saving.
+     * Define a relationship with the Token model.
      *
-     * @param string $value
-     * @return void
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-   
-   
-   
-   
-
-    
+    public function tokens()
+    {
+        return $this->hasMany(Token::class);
+    }
 }
