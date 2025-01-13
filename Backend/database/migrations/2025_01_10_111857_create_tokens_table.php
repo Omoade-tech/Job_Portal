@@ -10,10 +10,11 @@ class CreateTokensTable extends Migration
     {
         Schema::create('tokens', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('job_seeker_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('token', 64)->unique();
-            $table->text('abilities')->nullable();
+            $table->json('abilities')->nullable();
+            $table->unsignedBigInteger('tokenable_id');
+            $table->string('tokenable_type'); 
             $table->timestamps();
         });
     }

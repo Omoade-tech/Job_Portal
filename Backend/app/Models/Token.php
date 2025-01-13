@@ -6,19 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class Token extends Model
 {
-    //
     protected $fillable = [
         'name',
         'token',
         'abilities',
-        'user_id', 
+        'tokenable_id', 
+        'tokenable_type', 
+     
     ];
 
     /**
-     * Define the relationship with the user (JobSeeker or Employer).
+     * Define the polymorphic relationship.
      */
-    public function user()
+    public function tokenable()
     {
-        return $this->belongsTo(User::class); // Adjust this if you're using polymorphic relationships
+        return $this->morphTo();
     }
 }

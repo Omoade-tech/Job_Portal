@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Admin;
 use App\Models\Employer;
 use App\Models\JobSeeker;
+use App\Models\Token;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -17,7 +19,7 @@ class AuthController extends Controller
         try {
             // Merge password confirmation field to standardize it for validation
             $request->merge(['password_confirmation' => $request->confirmPassword]);
-    
+
             // Validate the request
             $validated = $request->validate([
                 'role' => 'required|in:admin,employer,job_seeker',
@@ -46,7 +48,7 @@ class AuthController extends Controller
                 'state' => 'required|string|max:255',
                 'country' => 'required|string|max:255',
             ]);
-    
+
             // Create the user based on the validated role
             $user = match ($validated['role']) {
                 'admin' => Admin::create([
@@ -90,24 +92,20 @@ class AuthController extends Controller
                 ]),
                 default => null,
             };
-    
+
             if (!$user) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to create user. Please try again.'
                 ], 500);
             }
-    
-            // Create token for the new user
-            // $token = $user->createToken('auth_token')->plainTextToken;
-    
+
             return response()->json([
                 'success' => true,
                 'message' => ucfirst($validated['role']) . ' registered successfully.',
                 'data' => $user,
-                // 'token' => $token
             ], 201);
-    
+
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -123,59 +121,65 @@ class AuthController extends Controller
             ], 500);
         }
     }
-    
+
 
     public function login(Request $request)
-{
-    try {
-        // Validate request
-        $validated = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
-
-        // Find user
-        $user = JobSeeker::where('email', $validated['email'])->first()
-            ?? Employer::where('email', $validated['email'])->first();
-
-        if (!$user) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+    {
+        try {
+            // Validate request
+            $validated = $request->validate([
+                'email' => 'required|email',
+                'password' => 'required|string',
             ]);
-        }
 
-        // Verify password
-        if (!Hash::check($validated['password'], $user->password)) {
-            throw ValidationException::withMessages([
-                'password' => ['The provided credentials are incorrect.'],
+            // Find user
+            $user = Admin::where('email', $validated['email'])->first()
+            ?? Employer::where('email', $validated['email'])->first()
+            ?? JobSeeker::where('email', $validated['email'])->first();
+            if (!$user) {
+                throw ValidationException::withMessages([
+                    'email' => ['The provided credentials are incorrect.'],
+                ]);
+            }
+
+            // Verify password
+            if (!Hash::check($validated['password'], $user->password)) {
+                throw ValidationException::withMessages([
+                    'password' => ['The provided credentials are incorrect.'],
+                ]);
+            }
+
+            // Create token
+            $token = $user->tokens()->create([
+                'name' => 'Default Token',
+                'token' => Str::random(60),
+                'abilities' => json_encode(['*']),
+                'tokenable_id' => $user->id,
+                'tokenable_type' => get_class($user),
             ]);
+    
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Login successful.',
+                'data' => $user,
+                'token' => $token->token,
+            ], 200);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Login failed. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        // Generate token
-        $token = $user->createToken('auth_token');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Login successful.',
-            'data' => $user,
-            'token' => $token->plainTextToken, // Access the plainTextToken property
-        ], 200);
-
-    } catch (ValidationException $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validation failed.',
-            'errors' => $e->errors()
-        ], 422);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Login failed. Please try again.',
-            'error' => $e->getMessage()
-        ], 500);
     }
-}
-
 
 
     public function logout(Request $request)
@@ -188,7 +192,7 @@ class AuthController extends Controller
                 'success' => true,
                 'message' => 'Successfully logged out.'
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Logout error: ' . $e->getMessage());
             return response()->json([
@@ -198,6 +202,7 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
 
     public function getUsersByRole(Request $request)
     {

@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Laravel\Sanctum\HasApiTokens; 
-// use App\Models\Token; 
+use Laravel\Sanctum\HasApiTokens;
+use App\Models\Token;
 
 class Admin extends Model
 {
@@ -32,12 +32,12 @@ class Admin extends Model
     ];
 
     /**
-     * Define a relationship with the Token model.
+     * Get all the tokens associated with the admin.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
      */
     public function tokens()
     {
-        return $this->hasMany(Token::class);
+        return $this->morphMany(Token::class, 'tokenable');
     }
 }

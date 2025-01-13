@@ -30,10 +30,10 @@ class Employer extends Model
         'state',
         'country',
     ];
-    public function tokens()        
-    {
-        return $this->hasMany(Token::class);
-    }
+    public function tokens()
+{
+    return $this->morphMany(Token::class, 'tokenable');
+}
  
     
     }
