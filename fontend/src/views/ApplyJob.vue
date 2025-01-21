@@ -26,8 +26,10 @@
           </div>
 
           <button type="submit" class="btn btn-primary w-100" :disabled="loading">
+            <span v-if="loading" class="spinner-border spinner-border-sm"></span>
             {{ loading ? 'Submitting...' : 'Submit Application' }}
           </button>
+
         </form>
       </div>
     </div>
@@ -49,6 +51,12 @@ export default {
       success: "",
       loading: false,
     };
+  },
+
+  mounted() {
+    if (!this.isLoggedIn()) {
+      this.$router.push({ name: 'login' });
+    }
   },
 
   methods: {
@@ -89,6 +97,12 @@ export default {
       const fileInput = document.querySelector('input[type="file"]');
       if (fileInput) fileInput.value = "";
     },
+
+    // isLoggedIn() {
+      // Replace with your actual authentication logic
+      // For example, you can check if the user has a valid token
+      // return localStorage.getItem('token') !== null;
+    // },
   },
 };
 </script>

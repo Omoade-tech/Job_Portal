@@ -85,6 +85,32 @@ export default {
     return apiClient.post('/logout');
   },
 
+  // User Role endpoints
+  getJobSeekers() {
+    return apiClient.get('/users', {
+      params: {
+        role: 'job_seeker'
+      }
+    });
+  },
+
+  getEmployers() {
+    return apiClient.get('/users', {
+      params: {
+        role: 'employer'
+      }
+    });
+  },
+
+  getUsersByRole(role) {
+    if (!['admin', 'employer', 'job_seeker'].includes(role)) {
+      throw new Error('Invalid role specified');
+    }
+    return apiClient.get('/users', {
+      params: { role }
+    });
+  },
+
   // Job Portal Endpoints
   getJobPortals(params = {}) {
     return apiClient.get('/job_portals', { params });
@@ -123,19 +149,14 @@ export default {
     return this.sendFormData(`/job_applies/${id}?_method=PUT`, data);
   },
 
-  // Updated Search Functionality
+  // Search Functionality
   searchJobPortals(searchParams) {
-    // Convert the search parameters to query parameters
     const params = {};
-    
-    // If filterType is 'query', use it as a general search
     if (searchParams.filterType === 'query') {
       params.query = searchParams.query;
     } else {
-      // Otherwise, use the specific filter type
       params[searchParams.filterType] = searchParams.query;
     }
-
     return apiClient.get('/job_portals/search', { params });
   },
 

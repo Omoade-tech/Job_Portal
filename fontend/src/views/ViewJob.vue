@@ -37,6 +37,11 @@
             >
               <i class="bi bi-trash"></i> Delete
             </button>
+            <button
+              class="btn  btn-success ms-3 "
+            >
+            <router-link to="/jobdetails" class="link">Back</router-link>
+            </button>
           </div>
         </div>
       </div>
@@ -118,6 +123,11 @@
     width: 50px;
     height: 50px;
     border-radius: 50%;
+  }
+  .link {
+    text-decoration: none;
+    color: inherit;
+    margin-left: 10px;
   }
   </style>
   

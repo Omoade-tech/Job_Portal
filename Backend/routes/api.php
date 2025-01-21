@@ -34,6 +34,7 @@ Route::get('/users', [AuthController::class, 'getUsersByRole']);
 //http://localhost:8000/api/register
 //http://localhost:8000/api/login
 //http://localhost:8000/api/logout
+// http://localhost:8000/api/users?role=job_seeker
 
 
 

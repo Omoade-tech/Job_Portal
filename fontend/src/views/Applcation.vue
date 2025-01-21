@@ -1,13 +1,11 @@
 <template>
     <div>
-        <add-job />
+
     </div>
 </template>
 
 <script>
-import AddJob from './AddJob.vue'
     export default {
-  components: { AddJob },
         
     }
 </script>

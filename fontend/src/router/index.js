@@ -12,6 +12,7 @@ import JobDetails from '@/views/JobDetails.vue'
 import ViewJob from '@/views/ViewJob.vue'
 import EditJob from '@/views/EditJob.vue'
 
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -82,6 +83,21 @@ const router = createRouter({
       name: 'logout',
       component: Logout,
     },
+    {
+      path: '/application',
+      name: 'application',
+      component: () => import('@/views/Applcation.vue')
+    },
+    {
+      path: '/registerseeker',
+      name: 'registerseeker',
+      component: () => import('@/views/RegisterSeeker.vue')
+    },
+  {
+    path: '/registeremployer',
+    name: 'registeremployer',
+    component: () => import('@/views/RegisterEmployer.vue')
+  }
   ],
 })
 

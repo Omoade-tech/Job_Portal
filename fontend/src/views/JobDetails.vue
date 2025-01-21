@@ -37,9 +37,9 @@
 
               <!-- Card Buttons -->
               <div class="card-btn m-3 d-flex justify-content-between">
-                <RouterLink to="/applyJob" class="btn btn-success">
+                <!-- <RouterLink to="/applyJob" class="btn btn-success">
                   Apply
-                </RouterLink>
+                </RouterLink> -->
 
                 <div>
                   <RouterLink :to="`/viewjob/${job.id}`" class="btn btn-primary me-2">

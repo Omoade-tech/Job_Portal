@@ -8,7 +8,7 @@
             <img src="/images/jobbg.png" alt="Job Portal Hero" />
           </div>
           <div class="text-content animate__animated animate__fadeInLeft">
-            <h1 style="color:green">Welcome to JBL Portal</h1>
+            <h1 style="color:blue">Welcome to JBL Portal</h1>
             <p style="color:#fff">
               The home for Developers searching for job opportunities around the world.
               There are thousands of jobs here.
@@ -22,7 +22,7 @@
     <!-- Roles Section with Bootstrap Cards -->
     <section class="roles-section py-5 bg-light">
       <div class="container">
-        <h2 class="text-center mb-4" style="color:green">Roles We're Hiring For</h2>
+        <h2 class="text-center mb-4" style="color:blueviolet">Roles We're Hiring For</h2>
         <div class="row g-4">
           <!-- Fullstack Developer Card -->
           <div class="col-md-3">
@@ -73,6 +73,11 @@
           </div>
         </div>
       </div>
+      <div class="card-btn mt-3 text-center">
+                <button class="btn btn-primary" type="button">
+                  <RouterLink to="/joblisting" class="nav-link">Browse All Jobs</RouterLink>
+                </button>
+              </div>
     </section>
 
     <!-- Logo Section -->

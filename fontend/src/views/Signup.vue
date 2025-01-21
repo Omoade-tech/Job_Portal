@@ -15,7 +15,7 @@
                 <label for="role" class="form-label">Role</label>
                 <select id="role" v-model="form.role" class="form-control" required>
                   <option disabled value="">Select Role</option>
-                  <option value="admin">Admin</option>
+                  <!-- <option value="admin">Admin</option> -->
                   <option value="employer">Employer</option>
                   <option value="job_seeker">Jobseeker</option>
                 </select>
