@@ -37,6 +37,7 @@
 </template>
 
 <script>
+import { useAuthStore } from "@/stores/Auth.js";
 import api from "@/services/api.js";
 
 export default {
@@ -50,6 +51,7 @@ export default {
       error: "",
       success: "",
       loading: false,
+      isAuthenticated: false
     };
   },
 
@@ -97,12 +99,21 @@ export default {
       const fileInput = document.querySelector('input[type="file"]');
       if (fileInput) fileInput.value = "";
     },
+    created() {
+      const authStore = useAuthStore();
+      this.isAuthenticated = authStore.isAuthenticated;
+  
+      if (!this.isAuthenticated) {
+        // Redirect to login if not authenticated
+        this.$router.push("/login");
+      }
+    },
+    isLoggedIn() {
+      const authStore = useAuthStore();
+      return authStore.isAuthenticated;
+    }
 
-    // isLoggedIn() {
-      // Replace with your actual authentication logic
-      // For example, you can check if the user has a valid token
-      // return localStorage.getItem('token') !== null;
-    // },
+   
   },
 };
 </script>
