@@ -1,65 +1,119 @@
-// src/stores/Auth.js
-import { defineStore } from 'pinia'
-import axios from 'axios'
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import api, { apiClient } from '@/services/api.js';
 
-export const useAuthStore = defineStore('auth', {
-  state: () => ({
-    user: null,
-    token: null,
-    usersByRole: [],
-    authError: null,
-  }),
-  getters: {
-    isAuthenticated: (state) => !!state.token,
-    currentUser: (state) => state.user,
-    usersByRole: (state) => state.usersByRole,
-    authError: (state) => state.authError,
-  },
-  actions: {
-    async register(payload) {
-      try {
-        const response = await axios.post('register', payload);
-        this.setUser(response.data.data);
-        this.setToken(response.data.token || null);
-        return response;
-      } catch (error) {
-        this.setAuthError(error.response?.data || error.message);
-        throw error;
-      }
-    },
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref(null);
+  const token = ref(localStorage.getItem('token'));
+  const isAuthenticated = computed(() => !!user.value && !!token.value);
+  const isLoading = ref(false);
+  const error = ref(null);
 
-    async login(payload) {
-      try {
-        const response = await axios.post('/login', payload);
-        this.setUser(response.data.data);
-        this.setToken(response.data.token);
-        return response;
-      } catch (error) {
-        this.setAuthError(error.response?.data || error.message);
-        throw error;
-      }
-    },
+  async function login(credentials) {
+    try {
+      isLoading.value = true;
+      error.value = null;
 
-    async logout() {
-      try {
-        await axios.post('/api/logout');
-        this.clearAuth();
-      } catch (error) {
-        console.error('Logout error:', error);
-        throw error;
-      }
-    },
+      const response = await api.login({
+        email: credentials.email,
+        password: credentials.password,
+        rememberMe: credentials.rememberMe
+      });
 
-    async getUsersByRole(role) {
-      try {
-        const response = await axios.get('/users-by-role', { params: { role } });
-        this.setUsersByRole(response.data.data);
-        return response;
-      } catch (error) {
-        console.error('Error fetching users by role:', error);
-        throw error;
+      if (response.data && response.data.token) {
+        token.value = response.data.token;
+        user.value = response.data.user;
+
+        if (credentials.rememberMe) {
+          localStorage.setItem('token', token.value);
+          localStorage.setItem('user', JSON.stringify(user.value));
+        } else {
+          sessionStorage.setItem('token', token.value);
+          sessionStorage.setItem('user', JSON.stringify(user.value));
+        }
+
+        // Set Authorization header
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${token.value}`;
+        return response.data;
       }
-    },
-  },
-  persist: true,
-})
+      throw new Error('Invalid response format');
+    } catch (err) {
+      error.value = err.response?.data?.message || 'Login failed';
+      throw err;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function checkAuth() {
+    try {
+      const storedToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const storedUserStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+      
+      if (!storedToken || !storedUserStr) {
+        user.value = null;
+        token.value = null;
+        return null;
+      }
+
+      try {
+        const storedUser = JSON.parse(storedUserStr);
+        user.value = storedUser;
+        token.value = storedToken;
+        
+        // Set Authorization header
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+        
+        console.log('Auth state updated:', {
+          user: user.value,
+          isAuthenticated: isAuthenticated.value
+        });
+        
+        return user.value;
+      } catch (e) {
+        console.error('Error parsing stored user data:', e);
+        user.value = null;
+        token.value = null;
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        return null;
+      }
+    } catch (err) {
+      console.error('Error checking auth:', err);
+      user.value = null;
+      token.value = null;
+      return null;
+    }
+  }
+
+  async function logout() {
+    try {
+      if (api.logout) {
+        await api.logout();
+      }
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      user.value = null;
+      token.value = null;
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+      delete apiClient.defaults.headers.common['Authorization'];
+    }
+  }
+
+  return {
+    user,
+    token,
+    isAuthenticated,
+    isLoading,
+    error,
+    login,
+    logout,
+    checkAuth
+  };
+});

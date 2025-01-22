@@ -1,34 +1,65 @@
 import axios from 'axios';
 
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: 'http://localhost:8000/api',
   headers: {
-    Accept: 'application/json',
-    'X-Requested-With': 'XMLHttpRequest',
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest'
   },
-  withCredentials: true,
+  withCredentials: true
 });
 
 // Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    console.log('API Request:', {
+      url: config.url,
+      method: config.method,
+      hasToken: !!token
+    });
     return config;
   },
   (error) => {
-    console.error('Request error:', error);
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
+// Response interceptor
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('API Response:', {
+      url: response.config.url,
+      status: response.status,
+      hasData: !!response.data
+    });
+    return response;
+  },
   (error) => {
     if (error.response) {
+      console.error('API Error Response:', {
+        url: error.config?.url,
+        status: error.response.status,
+        data: error.response.data,
+        headers: error.response.headers
+      });
       handleErrorResponse(error.response);
     } else if (error.request) {
-      console.error('No response received:', error.request);
+      console.error('API No Response:', {
+        url: error.config?.url,
+        request: error.request,
+        message: error.message
+      });
+      if (error.code === 'ERR_CONNECTION_REFUSED') {
+        console.error('Backend server is not running or not accessible');
+      }
     } else {
-      console.error('Error setting up request:', error.message);
+      console.error('API Request Setup Error:', error.message);
     }
     return Promise.reject(error);
   }
@@ -36,49 +67,69 @@ apiClient.interceptors.response.use(
 
 function handleErrorResponse(response) {
   const status = response.status;
-  const message = response.data.message || 'An error occurred.';
+  const message = response.data?.message || 'An error occurred.';
 
   switch (status) {
     case 401:
-      console.error('Unauthorized:', message);
+      // Clear auth state on unauthorized
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
       break;
     case 403:
-      console.error('Access forbidden:', message);
+      console.error('Forbidden access:', message);
+      break;
+    case 404:
+      console.error('Resource not found:', message);
       break;
     case 422:
-      console.error('Validation error:', response.data.errors);
-      break;
-    case 429:
-      console.error('Too many requests. Please try again later.');
-      break;
-    case 500:
-      console.error('Server error. Please try again later.');
+      console.error('Validation error:', message);
       break;
     default:
-      console.error('API Error:', message);
+      console.error(`Error ${status}:`, message);
   }
 }
 
 export default {
   // Auth endpoints
+  async login(credentials) {
+    console.log('Sending login request');
+    try {
+      const response = await apiClient.post('/login', credentials);
+      console.log('Full login response:', response.data);
+      
+      // Restructure the response to match our expected format
+      if (response.data.success && response.data.token) {
+        // Set the token in API client headers
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        
+        // Return restructured response
+        return {
+          data: {
+            token: response.data.token,
+            user: response.data.data
+          }
+        };
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Login request failed:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      throw error;
+    }
+  },
+
   register(formData) {
     return apiClient.post('/register', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
-  },
-
-  login(data) {
-    if (!data.email || !data.password) {
-      throw new Error('Email and password are required');
-    }
-    const payload = {
-      email: data.email,
-      password: data.password,
-      remember: data.rememberMe
-    };
-    return apiClient.post('/login', payload);
   },
 
   logout() {

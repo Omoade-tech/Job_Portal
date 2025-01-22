@@ -9,6 +9,8 @@ import App from './App.vue'
 import router from './router'
 
 const app = createApp(App)
+// const authStore = useAuthStore()
+// authStore.init();
 
 app.use(createPinia())
 app.component('Navbar', Navbar)

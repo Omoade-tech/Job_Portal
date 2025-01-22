@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/Auth'
 import Home from '../views/Home.vue'
 import JobListing from '@/views/JobListing.vue'
 import ApplyJob from '@/views/ApplyJob.vue'
@@ -27,9 +28,14 @@ const router = createRouter({
       component: JobListing,
     },
     {
-      path: '/applyjob',
+      path: '/applyjob/:id',
       name: 'applyjob',
       component: ApplyJob,
+      props: true,
+      meta: { 
+        requiresAuth: true,
+        role: 'job_seeker'
+      }
     },
     {
       path: '/addjob',
@@ -99,6 +105,48 @@ const router = createRouter({
     component: () => import('@/views/RegisterEmployer.vue')
   }
   ],
+})
+
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+  await authStore.checkAuth() // Check auth state before proceeding
+  
+  const publicPages = ['/login', '/signup', '/', '/joblisting', '/registerseeker', '/registeremployer']
+  const authRequired = !publicPages.includes(to.path)
+
+  if (authRequired && !authStore.isAuthenticated) {
+    // Store the intended destination
+    localStorage.setItem('intendedRoute', to.fullPath)
+    return next('/login')
+  }
+
+  if (to.path === '/login' && authStore.isAuthenticated) {
+    const intendedRoute = localStorage.getItem('intendedRoute')
+    if (intendedRoute) {
+      localStorage.removeItem('intendedRoute')
+      return next(intendedRoute)
+    }
+    return next('/')
+  }
+
+  // Check if the route requires authentication
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    // Store the intended route for redirect after login
+    if (!authStore.isAuthenticated) {
+      localStorage.setItem('intendedRoute', to.fullPath);
+      next({ name: 'Login' });
+      return;
+    }
+
+    // Check role requirements if specified
+    if (to.meta.role && authStore.user?.role !== to.meta.role) {
+      console.log('Unauthorized access: incorrect role');
+      next({ name: 'Home' });
+      return;
+    }
+  }
+
+  next()
 })
 
 export default router

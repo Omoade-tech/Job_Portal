@@ -94,6 +94,7 @@
 
 <script>
 import api from '@/services/api.js';
+import { useAuthStore } from '@/stores/Auth';
 
 export default {
   name: 'LoginView',
@@ -142,86 +143,91 @@ export default {
       return emailRegex.test(email);
     },
     async handleLogin() {
-  if (!this.validateForm()) return;
+      if (!this.validateForm()) return;
 
-  this.isLoading = true;
-  this.clearErrors();
+      this.isLoading = true;
+      this.clearErrors();
 
-  try {
-    // console.log('Sending API request...');
-    // console.log('API endpoint URL:', 'http://localhost:8000/api/login');
-    // console.log('API request headers:', {
-    //   'Content-Type': 'application/json',
-    //   'Accept': 'application/json'
-    // });
-    // console.log('API request body:', {
-    //   email: this.email,
-    //   password: this.password,
-    //   remember: this.rememberMe
-    // });
+      try {
+        console.log('Attempting login with:', { email: this.email, rememberMe: this.rememberMe });
+        const response = await api.login({
+          email: this.email,
+          password: this.password,
+          rememberMe: this.rememberMe
+        });
 
-    const response = await api.login({
-      email: this.email,
-      password: this.password,
-      remember: this.rememberMe
-    });
-    // console.log('API response:', response);
+        console.log('Login response:', {
+          hasToken: !!response?.data?.token,
+          hasUser: !!response?.data?.user,
+          userData: response?.data?.user
+        });
 
-    if (response.data.success) {
-      // Store user data and token
-      localStorage.setItem('user', JSON.stringify(response.data.data));
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-      }
+        if (response.data && response.data.token) {
+          // Update auth store
+          const authStore = useAuthStore();
+          await authStore.login({
+            email: this.email,
+            password: this.password,
+            rememberMe: this.rememberMe
+          });
 
-      const userRole = response.data.data.role;
-const roleRoutes = {
-  admin: 'AdminDashboard',
-  employer: 'EmployerDashboard',
-  job_seeker: 'JobSeekerDashboard'
-};
+          // Get return URL or determine dashboard based on role
+          const returnUrl = localStorage.getItem('intendedRoute');
+          const userData = response.data.user;
+          
+          // Safely get user role and determine route
+          let targetRoute = '/';
+          if (userData && userData.role) {
+            const roleRoutes = {
+              admin: '/AdminDashboard',
+              employer: '/EmployerDashboard',
+              job_seeker: `/JobSeekerDashboard/${userData.id}`
+            };
+            targetRoute = roleRoutes[userData.role] || '/';
+            console.log('Determined target route:', targetRoute);
+          }
 
-const userId = response.data.data.id;
-
-await this.$router.push({ 
-  name: roleRoutes[userRole] || '/', 
-  params: { id: userId } 
-});
-    } else {
-      this.error = response.data.message || 'An unexpected error occurred. Please try again.';
-    }
-  } catch (error) {
-    console.error('API error:', error);
-    this.error = 'An unexpected error occurred. Please try again.';
-  } finally {
-    this.isLoading = false;
-  }
-},
-    handleError(error) {
-      if (error.response) {
-        if (error.response.status === 204) {
-          // Handle successful response with no content
-          this.error = '';
-          this.$router.push({ name: 'dashboard' });
+          // Navigate to appropriate route
+          if (returnUrl) {
+            localStorage.removeItem('intendedRoute');
+            console.log('Navigating to return URL:', returnUrl);
+            await this.$router.push(returnUrl);
+          } else {
+            console.log('Navigating to target route:', targetRoute);
+            await this.$router.push(targetRoute);
+          }
         } else {
-          // Handle other error cases
+          this.error = 'Invalid response from server. Please try again.';
+        }
+      } catch (error) {
+        console.error('Login error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
+        console.error('Login error:', error);
+        if (error.response) {
+          // Handle specific error responses
           switch (error.response.status) {
-            case 422:
-              const errors = error.response.data.errors;
-              if (errors.email) this.emailError = errors.email[0];
-              if (errors.password) this.passwordError = errors.password[0];
-              break;
             case 401:
               this.error = 'Invalid email or password';
               break;
+            case 422:
+              this.error = Object.values(error.response.data.errors)[0][0];
+              break;
+            case 429:
+              this.error = 'Too many login attempts. Please try again later.';
+              break;
             default:
-              this.error = error.response.data.message || 'An unexpected error occurred. Please try again.';
+              this.error = error.response.data.message || 'An error occurred during login';
           }
+        } else if (error.code === 'ERR_NETWORK') {
+          this.error = 'Unable to connect to the server. Please check your connection and try again.';
+        } else {
+          this.error = 'An unexpected error occurred. Please try again.';
         }
-      } else if (error.request) {
-        this.error = 'Network error. Please check your connection.';
-      } else {
-        this.error = 'An unexpected error occurred. Please try again.';
+      } finally {
+        this.isLoading = false;
       }
     }
   }

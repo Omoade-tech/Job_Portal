@@ -16,9 +16,9 @@
               <!-- Card Header -->
               <div class="card-header d-flex align-items-center">
                 <img
-                  :src="job.companyLogo || defaultLogo"
-                  :alt="`${job.companyName} logo`"
-                  class="job-logo me-3"
+                  :src="job.company_logo || defaultLogo"
+                  :alt="job.companyName + ' logo'"
+                  class="company-logo me-3"
                   @error="handleImageError"
                 />
                 <div>
@@ -91,7 +91,8 @@
 </template>
 
 <script>
-import api from "@/services/api.js";
+import api from '@/services/api.js';
+import defaultLogo from '@/assets/default-company-logo.svg';
 
 export default {
   data() {
@@ -99,7 +100,7 @@ export default {
       jobs: null,
       loading: false,
       error: false,
-      defaultLogo: "https://via.placeholder.com/150", // Default logo URL
+      defaultLogo: defaultLogo,
       currentPage: 1, // Current active page
       itemsPerPage: 6, // Jobs per page
     };
@@ -167,7 +168,7 @@ export default {
   font-size: 1rem;
 }
 
-.job-logo {
+.company-logo {
   width: 40px;
   height: 40px;
   border-radius: 50%;

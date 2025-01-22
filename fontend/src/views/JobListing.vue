@@ -49,9 +49,9 @@
               <!-- Card Header -->
               <div class="card-header d-flex align-items-center">
                 <img
-                  :src="job.companyLogo || defaultLogo"
-                  :alt="`${job.companyName} logo`"
-                  class="job-logo me-3"
+                  :src="job.company_logo || defaultLogo"
+                  :alt="job.companyName + ' logo'"
+                  class="company-logo me-2"
                   @error="handleImageError"
                 />
                 <div>
@@ -68,8 +68,11 @@
                 <p><strong>Description:</strong> {{ truncateText(job.description, 100) }}</p>
               </div>
               <div class="card-btn m-3 text-end">
-                <button class="btn btn-success" type="button">
-                  <RouterLink to="/applyJob" class="nav-link">Apply</RouterLink>
+                <button 
+                  @click="handleApply(job)" 
+                  class="btn btn-success"
+                >
+                  Apply
                 </button>
               </div>
             </div>
@@ -114,6 +117,8 @@
 
 <script>
 import api from "@/services/api.js";
+import defaultLogo from '@/assets/default-company-logo.svg';
+import { useAuthStore } from '@/stores/Auth'
 
 export default {
   data() {
@@ -126,7 +131,7 @@ export default {
       isSearchActive: false,
       currentPage: 1,
       itemsPerPage: 6,
-      defaultLogo: "https://via.placeholder.com/160" 
+      defaultLogo: defaultLogo
     };
   },
 
@@ -218,7 +223,19 @@ export default {
 
     handleImageError(event) {
       event.target.src = this.defaultLogo; // Fallback to default logo URL
-    }
+    },
+
+    handleApply(job) {
+      const authStore = useAuthStore()
+      if (!authStore.isAuthenticated) {
+        // Store the job ID and intended route
+        localStorage.setItem('intendedJob', job.id)
+        localStorage.setItem('intendedRoute', `/applyJob/${job.id}`)
+        this.$router.push('/login')
+      } else {
+        this.$router.push(`/applyJob/${job.id}`)
+      }
+    },
   },
 
   mounted() {
@@ -251,7 +268,7 @@ export default {
   margin-bottom: 2rem;
 }
 
-.job-logo {
+.company-logo {
   width: 40px;
   height: 40px;
   border-radius: 50%;
