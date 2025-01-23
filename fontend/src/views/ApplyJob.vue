@@ -52,7 +52,7 @@
             />
           </div>
 
-          <button type="submit" class="btn btn-primary w-100" :disabled="loading || !formData.jobseeker_id">
+          <button type="submit" class="btn btn-primary w-100" :disabled="loading || !formData.job_seekers_id">
             <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
             {{ loading ? 'Submitting...' : 'Submit Application' }}
           </button>
@@ -91,7 +91,7 @@ export default {
         coverLetter: "",
         resume: null,
         job_portals_id: this.id,
-        jobseeker_id: null
+        job_seekers_id: null
       },
       error: null,
       success: null,
@@ -116,19 +116,19 @@ export default {
   },
 
   created() {
-    // Set the jobseeker_id when component is created
-    this.formData.jobseeker_id = this.jobseekerId;
+    // Set the job_seekers_id when component is created
+    this.formData.job_seekers_id = this.jobseekerId;
     
     // Also check localStorage/sessionStorage
     const storedUser = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || '{}');
     console.log('Stored user:', storedUser); // Debug log
     
     if (storedUser && storedUser.role === 'job_seeker') {
-      this.formData.jobseeker_id = storedUser.model_id || storedUser.id;
+      this.formData.job_seekers_id = storedUser.model_id || storedUser.id;
     }
 
     // Log the current state
-    console.log('Initial jobseeker_id:', this.formData.jobseeker_id);
+    console.log('Initial job_seekers_id:', this.formData.job_seekers_id);
   },
 
   watch: {
@@ -136,8 +136,8 @@ export default {
       handler(newUser) {
         console.log('User changed:', newUser); // Debug log
         if (newUser && newUser.role === 'job_seeker') {
-          this.formData.jobseeker_id = newUser.model_id || newUser.id;
-          console.log('Updated jobseeker_id:', this.formData.jobseeker_id);
+          this.formData.job_seekers_id = newUser.model_id || newUser.id;
+          console.log('Updated job_seekers_id:', this.formData.job_seekers_id);
         }
       },
       immediate: true
@@ -151,7 +151,7 @@ export default {
         return;
       }
 
-      if (!this.formData.jobseeker_id) {
+      if (!this.formData.job_seekers_id) {
         this.error = "You must be logged in as a job seeker to apply";
         return;
       }
@@ -167,14 +167,14 @@ export default {
         submitData.append('coverLetter', this.formData.coverLetter);
         submitData.append('resume', this.formData.resume);
         submitData.append('job_portals_id', this.formData.job_portals_id);
-        submitData.append('jobseeker_id', this.formData.jobseeker_id);
+        submitData.append('job_seekers_id', this.formData.job_seekers_id);
 
         // Debug log the data being sent
         console.log('Submitting application with data:', {
           coverLetter: this.formData.coverLetter ? 'present' : 'missing',
           resume: this.formData.resume ? 'present' : 'missing',
           job_portals_id: this.formData.job_portals_id,
-          jobseeker_id: this.formData.jobseeker_id,
+          job_seekers_id: this.formData.job_seekers_id,
           userRole: this.authStore.user?.role
         });
 
@@ -208,14 +208,14 @@ export default {
     handleFileChange(e) {
       const file = e.target.files[0];
       if (file) {
-        if (file.size > 2 * 1024 * 1024) { // 2MB in bytes
+        if (file.size > 2 * 1024 * 1024) { 
           this.error = "File size must be less than 2MB";
-          e.target.value = ''; // Clear the file input
+          e.target.value = ''; 
           return;
         }
         if (file.type !== 'application/pdf') {
           this.error = "Only PDF files are allowed";
-          e.target.value = ''; // Clear the file input
+          e.target.value = ''; 
           return;
         }
         this.formData.resume = file;
@@ -242,7 +242,7 @@ export default {
         coverLetter: "",
         resume: null,
         job_portals_id: this.id,
-        jobseeker_id: this.jobseekerId // Use computed property
+        job_seekers_id: this.jobseekerId
       };
       // Reset file input
       const fileInput = document.querySelector('input[type="file"]');

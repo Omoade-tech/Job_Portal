@@ -36,7 +36,7 @@ class JobApplyController extends Controller
                 'coverLetter' => 'required|string|min:20',
                 'resume' => 'required|file|mimes:pdf|max:2048',
                 'job_portals_id' => 'required|exists:job_portals,id',
-                'jobseeker_id' => 'required|exists:job_seekers,id', 
+                'job_seekers_id' => 'required|exists:job_seekers,id', 
             ]);
 
             // Handle file upload
@@ -44,8 +44,8 @@ class JobApplyController extends Controller
                 $validatedData['resume'] = $request->file('resume')->store('resumes', 'public');
             }
 
-            // Add jobseeker_id to the validated data
-            $validatedData['jobseeker_id'] = $request->jobseeker_id;
+            // Add job_seekers_id to the validated data
+            $validatedData['job_seekers_id'] = $request->job_seekers_id;
 
             $jobapply = JobApply::create($validatedData);
 
@@ -64,7 +64,7 @@ class JobApplyController extends Controller
                 'coverLetter' => 'required|string|min:20',
                 'resume' => 'required|file|mimes:pdf|max:2048',
                 'job_portals_id' => 'required|exists:job_portals,id',
-                'jobseeker_id' => 'required|exists:job_seekers,id', 
+                'job_seekers_id' => 'required|exists:job_seekers,id', 
             ]);
 
             $jobapply = JobApply::findOrFail($id);
@@ -74,8 +74,8 @@ class JobApplyController extends Controller
                 $validatedData['resume'] = $request->file('resume')->store('resumes', 'public');
             }
 
-            // Add jobseeker_id to the validated data
-            $validatedData['jobseeker_id'] = $request->jobseeker_id;
+            // Add job_seekers_id to the validated data
+            $validatedData['job_seekers_id'] = $request->job_seekers_id;
 
             $jobapply->update($validatedData);
 
