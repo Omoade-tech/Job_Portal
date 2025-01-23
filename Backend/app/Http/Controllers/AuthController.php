@@ -136,6 +136,7 @@ class AuthController extends Controller
             $user = Admin::where('email', $validated['email'])->first()
             ?? Employer::where('email', $validated['email'])->first()
             ?? JobSeeker::where('email', $validated['email'])->first();
+            
             if (!$user) {
                 throw ValidationException::withMessages([
                     'email' => ['The provided credentials are incorrect.'],
@@ -149,6 +150,14 @@ class AuthController extends Controller
                 ]);
             }
 
+            // Determine user role
+            $role = match (get_class($user)) {
+                Admin::class => 'admin',
+                Employer::class => 'employer',
+                JobSeeker::class => 'job_seeker',
+                default => null
+            };
+
             // Create token
             $token = $user->tokens()->create([
                 'name' => 'Default Token',
@@ -157,12 +166,17 @@ class AuthController extends Controller
                 'tokenable_id' => $user->id,
                 'tokenable_type' => get_class($user),
             ]);
-    
+
+            // Add role and model info to user data
+            $userData = $user->toArray();
+            $userData['role'] = $role;
+            $userData['model_type'] = get_class($user);
+            $userData['model_id'] = $user->id;
 
             return response()->json([
                 'success' => true,
                 'message' => 'Login successful.',
-                'data' => $user,
+                'data' => $userData,
                 'token' => $token->token,
             ], 200);
 

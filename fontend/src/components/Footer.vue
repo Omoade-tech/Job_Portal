@@ -3,7 +3,9 @@
       <div class="container">
         <div class="row">
           <div class="col-md-12 text-center">
-            &copy; Job Portal {{ currentYear }}
+            <!-- &copy; Job Portal {{ currentYear }} -->
+            &copy; Job Portal @2024
+
             <p>All rights reserved | {{ currentYear }}</p>
           </div>
         </div>
