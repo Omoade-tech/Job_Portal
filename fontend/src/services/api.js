@@ -200,6 +200,40 @@ export default {
     return this.sendFormData(`/job_applies/${id}?_method=PUT`, data);
   },
 
+  // Employer Dashboard Endpoints
+  getEmployerApplications(employerId) {
+    if (!employerId) {
+      return Promise.reject(new Error('Invalid employer ID'));
+    }
+
+    console.log('Fetching employer applications for ID:', employerId);
+    return apiClient.get(`/job_applies/employer/${employerId}`)
+      .then(response => {
+        // Ensure the response matches the expected structure
+        if (response.data && response.data.success) {
+          return response.data;
+        }
+        throw new Error('Invalid response from server');
+      })
+      .catch(error => {
+        console.error('Error fetching employer applications:', error);
+        
+        // Provide a more user-friendly error message
+        if (error.response) {
+          throw new Error(
+            error.response.data.message || 
+            'Failed to fetch employer applications'
+          );
+        }
+        
+        throw error;
+      });
+  },
+
+  updateApplicationStatus(applicationId, data) {
+    return apiClient.put(`/job_applies/${applicationId}/status`, data);
+  },
+
   // Search Functionality
   searchJobPortals(searchParams) {
     const params = {};

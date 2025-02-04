@@ -15,12 +15,14 @@ return new class extends Migration
             $table->id(); 
             $table->text('coverLetter')->nullable(); 
             $table->string('resume')->nullable(); 
+            $table->string('job_title')->nullable(); 
             $table->foreignId('job_portals_id')->nullable()
                   ->constrained('job_portals') 
                   ->onDelete('cascade'); 
             $table->foreignId('job_seekers_id')->nullable()
                   ->constrained('job_seekers') 
                   ->onDelete('cascade'); 
+            $table->string('status')->default('pending');
             $table->timestamps();
         });
     }
