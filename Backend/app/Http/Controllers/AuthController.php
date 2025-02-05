@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -150,7 +152,7 @@ class AuthController extends Controller
                 ]);
             }
 
-            // Determine user role
+            // Determine user role and ID
             $role = match (get_class($user)) {
                 Admin::class => 'admin',
                 Employer::class => 'employer',
@@ -172,6 +174,12 @@ class AuthController extends Controller
             $userData['role'] = $role;
             $userData['model_type'] = get_class($user);
             $userData['model_id'] = $user->id;
+
+            // Add specific employer ID for employer role
+            if ($role === 'employer') {
+                // Assuming the Employer model has an 'id' column
+                $userData['employer_id'] = $user->id;
+            }
 
             return response()->json([
                 'success' => true,

@@ -15,7 +15,6 @@
                 class="form-control"
                 accept="image/*"
                 @change="onFileChange"
-                required
               />
             </div>
   
@@ -53,7 +52,7 @@
                 id="salary"
                 v-model="salary"
                 class="form-control"
-                placeholder="Enter salary"
+                placeholder="Enter salary (e.g. $50,000)"
                 required
               />
             </div>
@@ -84,7 +83,6 @@
                 <option value="fulltime">Full-Time</option>
                 <option value="remote">Remote</option>
                 <option value="parttime">Part-Time</option>
-                <option value="parttime">Contract</option>
               </select>
             </div>
   
@@ -113,6 +111,11 @@
                 required
               ></textarea>
             </div>
+
+            <!-- Error Message -->
+            <div v-if="errorMessage" class="alert alert-danger mb-3">
+              {{ errorMessage }}
+            </div>
   
             <!-- Submit Button -->
             <button type="submit" class="btn btn-primary w-100" :disabled="loading">
@@ -126,69 +129,122 @@
   </template>
   
   <script>
-  import jobApi from "@/services/api.js";
-  
+  import { useAuthStore } from '@/stores/Auth'
+  import api from '@/services/api'
+
   export default {
     data() {
       return {
         companyLogo: null,
-        companyName: "",
-        post: "",
-        salary: null,
-        location: "",
-        contract: "",
-        description: "",
-        responsibility: "",
+        companyName: '',
+        post: '',
+        salary: '',
+        location: '',
+        contract: '',
+        description: '',
+        responsibility: '',
         loading: false,
-      };
+        errorMessage: '',
+        authStore: null,
+        employerId: null
+      }
+    },
+    created() {
+      // Initialize the auth store
+      this.authStore = useAuthStore()
+
+      // Log authentication details
+      console.log('AddJob Created Hook - User Details:', {
+        user: this.authStore.user,
+        isAuthenticated: this.authStore.isAuthenticated,
+        userRole: this.authStore.user?.role
+      })
+
+      // Check if user is an employer and set employer ID
+      if (!this.authStore.isAuthenticated || this.authStore.user?.role !== 'employer') {
+        alert('Only employers can post jobs.')
+        this.$router.push('/dashboard')
+      } else {
+        // Extract employer ID from the authenticated user
+        this.employerId = this.authStore.user?.employer_id || this.authStore.user?.id
+      }
     },
     methods: {
       onFileChange(event) {
-        this.companyLogo = event.target.files[0];
+        this.companyLogo = event.target.files[0]
       },
+      
       async handlePostJob() {
-        this.loading = true;
-  
+        this.loading = true
+        this.errorMessage = ''
+
         try {
-          // Prepare form data
-          const formData = new FormData();
-          formData.append("companyLogo", this.companyLogo);
-          formData.append("companyName", this.companyName);
-          formData.append("post", this.post);
-          formData.append("salary", this.salary);
-          formData.append("location", this.location);
-          formData.append("contract", this.contract);
-          formData.append("description", this.description);
-          formData.append("responsibility", this.responsibility);
-  
-          // Post the job
-          await jobApi.createJobPortal(formData);
-          alert("Job posted successfully!");
-          this.resetForm();
+          const formData = new FormData()
+          formData.append('companyName', this.companyName)
+          formData.append('post', this.post)
+          formData.append('salary', this.salary)
+          formData.append('location', this.location)
+          formData.append('contract', this.contract)
+          formData.append('description', this.description)
+          formData.append('responsibility', this.responsibility)
+
+          // Append employer ID
+          if (this.employerId) {
+            formData.append('employer_id', this.employerId)
+          }
+
+          // Append logo if selected
+          if (this.companyLogo) {
+            formData.append('companyLogo', this.companyLogo)
+          }
+
+          // Use sendFormData method
+          const response = await api.sendFormData('/job_portals', formData)
+
+          if (response.data) {
+            alert('Job Posted Successfully!')
+            this.resetForm()
+            this.$router.push('/joblisting')
+          }
         } catch (error) {
-          console.error("Failed to post job:", error);
-          alert(
-            error.response?.data?.errors
-              ? JSON.stringify(error.response.data.errors)
-              : "Failed to post job. Please try again."
-          );
+          console.error('Job Posting Error:', error)
+          
+          if (error.response) {
+            console.error('Error Response:', error.response.data)
+            
+            if (error.response.data.errors) {
+              const errors = Object.values(error.response.data.errors).flat()
+              this.errorMessage = errors.join(', ')
+            } else if (error.response.data.message) {
+              this.errorMessage = error.response.data.message
+            }
+          } else {
+            this.errorMessage = "Failed to post job. Please try again."
+          }
+
+          alert(this.errorMessage)
         } finally {
-          this.loading = false;
+          this.loading = false
         }
       },
+      
       resetForm() {
-        this.companyLogo = null;
-        this.companyName = "";
-        this.post = "";
-        this.salary = null;
-        this.location = "";
-        this.contract = "";
-        this.description = "";
-        this.responsibility = "";
-      },
-    },
-  };
+        this.companyLogo = null
+        this.companyName = ''
+        this.post = ''
+        this.salary = ''
+        this.location = ''
+        this.contract = ''
+        this.description = ''
+        this.responsibility = ''
+      }
+    }
+  }
   </script>
   
-  <style lang="scss" scoped></style>
-  
+  <style lang="scss" scoped>
+  .spinner-border {
+    width: 1rem;
+    height: 1rem;
+  }
+  </style>

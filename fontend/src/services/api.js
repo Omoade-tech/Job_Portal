@@ -91,6 +91,15 @@ function handleErrorResponse(response) {
   }
 }
 
+function ensureToken() {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+  if (!token) {
+    console.error('No authentication token found')
+    throw new Error('Authentication token is missing')
+  }
+  apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
+}
+
 export default {
   // Auth endpoints
   async login(credentials) {
@@ -99,8 +108,25 @@ export default {
       const response = await apiClient.post('/login', credentials);
       console.log('Full login response:', response.data);
       
+      // Enhanced employer ID extraction
+      const userData = response.data.data || {};
+      const employerId = 
+        userData.employer_id || 
+        userData.model_id || 
+        (userData.role === 'employer' ? userData.id : null);
+
+      console.log('Login Response Details:', {
+        hasToken: !!response.data.token,
+        userData: userData,
+        employerId: employerId,
+        role: userData.role
+      });
+      
       // Restructure the response to match our expected format
       if (response.data.success && response.data.token) {
+        // Augment user data with employer ID
+        userData.employer_id = employerId;
+
         // Set the token in API client headers
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         
@@ -108,7 +134,7 @@ export default {
         return {
           data: {
             token: response.data.token,
-            user: response.data.data
+            user: userData
           }
         };
       }
@@ -202,36 +228,92 @@ export default {
 
   // Employer Dashboard Endpoints
   getEmployerApplications(employerId) {
+    console.group('API: Employer Applications Fetch')
+    console.log('Fetching employer applications', { 
+      employerId,
+      type: typeof employerId,
+      stringValue: String(employerId)
+    })
+    
     if (!employerId) {
-      return Promise.reject(new Error('Invalid employer ID'));
+      console.error('No employer ID provided')
+      console.groupEnd()
+      return Promise.reject(new Error('Employer ID is required'))
     }
 
-    console.log('Fetching employer applications for ID:', employerId);
-    return apiClient.get(`/job_applies/employer/${employerId}`)
-      .then(response => {
-        // Ensure the response matches the expected structure
-        if (response.data && response.data.success) {
-          return response.data;
-        }
-        throw new Error('Invalid response from server');
+    try {
+      // Ensure token is set before making the request
+      ensureToken()
+
+      console.log('API Request: Fetching employer applications', {
+        employerId,
+        hasToken: !!apiClient.defaults.headers.common['Authorization']
       })
-      .catch(error => {
-        console.error('Error fetching employer applications:', error);
-        
-        // Provide a more user-friendly error message
-        if (error.response) {
-          throw new Error(
-            error.response.data.message || 
-            'Failed to fetch employer applications'
-          );
-        }
-        
-        throw error;
-      });
+
+      return apiClient.get(`/job_applies/employer/${employerId}`)
+        .then(response => {
+          console.log('Employer Applications Response:', {
+            status: response.status,
+            data: response.data,
+            dataType: typeof response.data,
+            dataLength: response.data?.data ? response.data.data.length : 'N/A'
+          })
+
+          // Ensure consistent response structure
+          const processedResponse = {
+            success: response.data.success !== undefined ? response.data.success : true,
+            data: response.data.data || response.data,
+            message: response.data.message || ''
+          }
+
+          console.log('Processed Response:', processedResponse)
+          console.groupEnd()
+
+          return processedResponse
+        })
+        .catch(error => {
+          console.group('API: Employer Applications Error')
+          console.error('Error fetching employer applications', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+            config: error.config
+          })
+
+          // Handle specific error scenarios
+          if (error.response) {
+            switch (error.response.status) {
+              case 401:
+                console.error('Unauthorized: Token might be invalid')
+                // Clear token and redirect to login
+                localStorage.removeItem('token')
+                sessionStorage.removeItem('token')
+                localStorage.removeItem('user')
+                sessionStorage.removeItem('user')
+                window.location.href = '/login'
+                break
+              case 403:
+                console.error('Forbidden: Insufficient permissions')
+                break
+              case 404:
+                console.error('No applications found for this employer')
+                break
+              default:
+                console.error('Unknown error fetching applications')
+            }
+          }
+
+          console.groupEnd()
+          throw error
+        })
+    } catch (error) {
+      console.error('Token setup error:', error)
+      throw error
+    }
   },
 
   updateApplicationStatus(applicationId, data) {
-    return apiClient.put(`/job_applies/${applicationId}/status`, data);
+    return apiClient.put(`/applications/${applicationId}/status`, data);
   },
 
   // Search Functionality

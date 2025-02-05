@@ -25,7 +25,7 @@
             <option value="accepted">Accepted</option>
             <option value="rejected">Rejected</option>
           </select>
-          <button @click="getEmployerApplication" class="btn btn-sm btn-outline-primary">
+          <button @click="handleGetApplications" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-arrow-clockwise"></i> Refresh
           </button>
         </div>
@@ -114,55 +114,136 @@ export default {
     }
   },
   methods: {
-    async getEmployerApplication() {
-      const employerId = this.user.id || this.user.model_id
-
-      // Validate employer ID
-      if (!employerId) {
-        this.error = 'Invalid employer ID. Please log in again.'
-        console.error('No employer ID found')
-        this.$router.push('/login')
-        return
-      }
-
+    async mounted() {
+      const authStore = useAuthStore()
+      
       try {
+        // Perform comprehensive authentication check
+        const authenticatedUser = await authStore.checkAuth()
+        
+        // Log the entire user object to understand its structure
+        console.log('Authenticated User Object:', authenticatedUser)
+        
+        // More robust employer ID extraction
+        const employerId = 
+          authenticatedUser?.employer_id || 
+          authenticatedUser?.model_id || 
+          (authenticatedUser?.role === 'employer' ? authenticatedUser.id : null)
+
+        if (!employerId) {
+          console.error('No valid employer ID found')
+          this.error = 'Unable to identify employer. Please log in again.'
+          this.$router.push('/login')
+          return
+        }
+
+        // Pass the confirmed employer ID
+        await this.getEmployerApplication(employerId)
+      } catch (error) {
+        console.error('Mounting error:', error)
+        this.error = 'Failed to initialize dashboard. Please log in again.'
+        this.$router.push('/login')
+      }
+    },
+    async getEmployerApplication(employerId) {
+      try {
+        console.group('Employer Application Fetch')
+        console.log('Attempting to fetch applications with Employer ID:', {
+          employerId,
+          type: typeof employerId,
+          stringValue: String(employerId)
+        })
+
+        // Ensure loading state is set
         this.loading = true
         this.error = null
 
-        console.log('Fetching employer applications for ID:', employerId)
-        const response = await api.getEmployerApplications(employerId)
+        // Log the full authenticated user object
+        console.log('Current Authenticated User:', this.user)
 
-        // Ensure the response matches the expected structure
-        if (response.success) {
-          this.applicants = response.data || []
-          console.log('Processed Applicants:', {
-            count: this.applicants.length,
-            applicants: this.applicants
-          })
-        } else {
-          throw new Error(response.message || 'Invalid response from server')
-        }
-      } catch (err) {
-        // Comprehensive error handling
-        console.error('Get Applications Error:', {
-          message: err.message,
-          fullError: err
+        // Detailed API call logging
+        console.log('Calling API with Employer ID:', employerId)
+        const response = await api.getEmployerApplications(employerId)
+        
+        console.log('Full API Response:', {
+          success: response.success,
+          data: response.data,
+          dataType: typeof response.data,
+          dataLength: response.data ? response.data.length : 'N/A'
         })
 
-        this.error = 'Failed to fetch applications: ' + 
-          (err.message || 'Unknown error')
+        // Ensure data is processed correctly
+        if (response && response.data) {
+          this.applicants = response.data || []
+          
+          console.log('Processed Applications:', {
+            count: this.applicants.length,
+            applications: this.applicants
+          })
 
-        // Additional error handling for authentication issues
-        if (err.response && err.response.status === 401) {
-          const authStore = useAuthStore()
-          await authStore.logout()
-          this.$router.push('/login')
+          // Set user-friendly message if no applications
+          if (this.applicants.length === 0) {
+            this.error = 'No job applications found for this employer.'
+            console.warn('No applications found for employer')
+          }
+        } else {
+          // Handle unexpected response structure
+          console.error('Invalid response structure:', response)
+          throw new Error('Invalid response format from server')
         }
+
+        console.groupEnd()
+      } catch (error) {
+        console.group('Employer Application Fetch Error')
+        console.error('Application Fetch Error:', {
+          message: error.message,
+          response: error.response,
+          fullError: error
+        })
+
+        // Set specific error messages based on error type
+        if (error.response) {
+          switch (error.response.status) {
+            case 401:
+              this.error = 'Session expired. Please log in again.'
+              this.$router.push('/login')
+              break
+            case 403:
+              this.error = 'You are not authorized to view these applications.'
+              break
+            case 404:
+              this.error = 'No applications found for this employer.'
+              break
+            default:
+              this.error = error.response.data.message || 
+                           'Failed to fetch applications. Please try again later.'
+          }
+        } else {
+          this.error = error.message || 
+                       'Network error or server unavailable. Please check your connection.'
+        }
+        console.groupEnd()
       } finally {
+        // Ensure loading state is always turned off
         this.loading = false
       }
     },
+    async handleGetApplications() {
+      const authStore = useAuthStore()
+      const authenticatedUser = authStore.user
 
+      const employerId = 
+        authenticatedUser?.employer_id || 
+        authenticatedUser?.model_id || 
+        (authenticatedUser?.role === 'employer' ? authenticatedUser.id : null)
+
+      if (employerId) {
+        await this.getEmployerApplication(employerId)
+      } else {
+        console.error('No employer ID found')
+        this.error = 'Unable to retrieve employer applications. Please log in again.'
+      }
+    },
     async updateStatus(applicationId, status) {
       try {
         this.error = null
@@ -195,12 +276,6 @@ export default {
       })
     }
   },
-  async mounted() {
-    // Check authentication before fetching applicants
-    const authStore = useAuthStore()
-    await authStore.checkAuth()
-    this.getEmployerApplication()
-  }
 }
 </script>
 

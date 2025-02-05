@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('job_portals', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('employer_id')->constrained('employers')->onDelete('cascade');
             $table->string('companyLogo')->nullable();
             $table->string('companyName'); 
             $table->string('contract'); 
@@ -30,6 +31,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('job_portals');
+        if (Schema::hasTable('job_portals')) {
+            Schema::dropIfExists('job_portals');
+        }
     }
 };

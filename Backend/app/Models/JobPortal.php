@@ -10,6 +10,7 @@ class JobPortal extends Model
     use HasFactory;
 
     protected $fillable = [
+        'employer_id',
         'companyLogo',
         'companyName',
         'contract',
@@ -28,5 +29,9 @@ class JobPortal extends Model
     public function getJobSummary()
     {
         return "{$this->post} at {$this->companyName}, {$this->location} - {$this->contract} contract. Salary: {$this->salary}";
+    }
+    public function employer()
+    {
+        return $this->belongsTo(Employer::class);
     }
 }

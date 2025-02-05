@@ -8,6 +8,7 @@ use App\Models\JobPortal;
 use App\Models\Employer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class JobApplyController extends Controller
 {
@@ -34,6 +35,8 @@ class JobApplyController extends Controller
     public function store(Request $request)
     {
         try {
+            Log::info('Job Apply Store Request Data:', $request->all());
+            
             $validatedData = $request->validate([
                 'coverLetter' => 'required|string',
                 'resume' => 'required|file|mimes:pdf,doc,docx',
@@ -41,10 +44,20 @@ class JobApplyController extends Controller
                 'job_seekers_id' => 'required|exists:job_seekers,id',
             ]);
 
+            // Detailed logging of validation data
+            Log::info('Validated Job Apply Data:', $validatedData);
+
             // Get the job title from the job portal
             $jobPortal = JobPortal::findOrFail($validatedData['job_portals_id']);
             
+            // Detailed logging of file upload
+            if (!$request->hasFile('resume')) {
+                Log::error('No resume file uploaded');
+                throw new \Exception('Resume file is required');
+            }
+
             $path = $request->file('resume')->store('resumes', 'public');
+            Log::info('Resume uploaded successfully', ['path' => $path]);
             
             $jobApply = JobApply::create([
                 'coverLetter' => $validatedData['coverLetter'],
@@ -60,7 +73,24 @@ class JobApplyController extends Controller
                 'message' => 'Application submitted successfully',
                 'data' => $jobApply
             ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Log validation errors
+            Log::error('Validation Error in Job Apply', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
+            // Log any other unexpected errors
+            Log::error('Unexpected Error in Job Apply Store', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to submit application: ' . $e->getMessage()
@@ -85,7 +115,7 @@ class JobApplyController extends Controller
             if ($request->hasFile('resume')) {
                 // Delete old resume if it exists
                 if ($jobapply->resume) {
-                    \Storage::disk(name: 'public')->delete($jobapply->resume);
+                    Storage::disk(name: 'public')->delete($jobapply->resume);
                 }
                 $validatedData['resume'] = $request->file('resume')->store('resumes', 'public');
             } else {
@@ -135,30 +165,50 @@ class JobApplyController extends Controller
 
     public function getApplicationsByEmployer($employerId)
     {
+        Log::info('getApplicationsByEmployer called', [
+            'employerId' => $employerId,
+            'request_path' => request()->path(),
+            'request_method' => request()->method(),
+            'input_type' => gettype($employerId)
+        ]);
+
         try {
-            // Validate employer ID
-            if (!$employerId) {
+            // More flexible employer matching
+            $employer = Employer::where('id', $employerId)
+                                 ->orWhere('user_id', $employerId)
+                                 ->first();
+
+            Log::info('Employer Lookup', [
+                'employerId' => $employerId,
+                'employer_found' => $employer ? 'Yes' : 'No',
+                'employer_details' => $employer ? [
+                    'id' => $employer->id,
+                    'name' => $employer->name,
+                    'email' => $employer->email
+                ] : null
+            ]);
+
+            if (!$employer) {
+                Log::warning('No employer found', ['employerId' => $employerId]);
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid employer ID'
-                ], 400);
+                    'success' => true,
+                    'data' => [],
+                    'message' => 'No employer found'
+                ], 200);
             }
 
-            // Find the employer
-            $employer = Employer::findOrFail($employerId);
-
-            // Find job portals for this employer using multiple matching strategies
+            // More flexible job portal matching
             $employerJobPortals = JobPortal::where(function($query) use ($employer) {
-                $query->where('companyName', $employer->name)
-                      ->orWhere('employer_id', $employer->id);
+                $query->where('employer_id', $employer->id)
+                      ->orWhere('companyName', $employer->name)
+                      ->orWhere('user_id', $employer->user_id);
             })->get();
 
-            // Log job portals for debugging
-            \Log::info('Employer Job Portals', [
-                'employer_name' => $employer->name,
-                'employer_id' => $employer->id,
-                'portal_count' => $employerJobPortals->count(),
-                'portal_ids' => $employerJobPortals->pluck('id')->toArray()
+            Log::info('Employer Job Portals', [
+                'employerId' => $employerId,
+                'employerName' => $employer->name ?? 'N/A',
+                'jobPortalsCount' => $employerJobPortals->count(),
+                'jobPortalIds' => $employerJobPortals->pluck('id')
             ]);
 
             // If no job portals found, return empty list
@@ -170,8 +220,8 @@ class JobApplyController extends Controller
                 ], 200);
             }
 
-            // Fetch applications for job portals
-            $applications = JobApply::with(['jobPortal'])
+            // Fetch applications for job portals with detailed job portal information
+            $applications = JobApply::with(['jobPortal', 'jobSeeker'])
                 ->whereIn('job_portals_id', $employerJobPortals->pluck('id'))
                 ->latest()
                 ->get()
@@ -183,37 +233,30 @@ class JobApplyController extends Controller
                             'title' => $application->job_title ?? $application->jobPortal->post,
                             'company' => $application->jobPortal->companyName,
                         ],
+                        'jobSeeker' => [
+                            'id' => $application->jobSeeker->id,
+                            'name' => $application->jobSeeker->name,
+                            'email' => $application->jobSeeker->email,
+                        ],
                         'status' => $application->status,
+                        'coverLetter' => $application->coverLetter,
+                        'resume' => $application->resume,
                         'created_at' => $application->created_at,
                     ];
                 });
 
-            // Log applications for debugging
-            \Log::info('Employer Applications', [
-                'total_applications' => $applications->count(),
-                'application_ids' => $applications->pluck('id')->toArray()
+            Log::info('Employer Applications', [
+                'employerId' => $employerId,
+                'applicationsCount' => $applications->count()
             ]);
 
             return response()->json([
                 'success' => true,
                 'data' => $applications
             ], 200);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Log specific not found errors
-            \Log::error('Employer Not Found', [
-                'employer_id' => $employerId,
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Employer not found',
-                'error' => $e->getMessage()
-            ], 404);
         } catch (\Exception $e) {
-            // Log any other unexpected errors
-            \Log::error('Error Fetching Employer Applications', [
-                'employer_id' => $employerId,
+            Log::error('Failed to fetch applications', [
+                'employerId' => $employerId,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);

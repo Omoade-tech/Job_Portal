@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Employer;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\JobPortal>
@@ -17,6 +18,7 @@ class JobPortalFactory extends Factory
     public function definition(): array
     {
         return [
+            'employer_id' => Employer::factory(),
             'companyLogo' => $this->faker->imageUrl(100, 100, 'technology', true, 'Tech Logo'), 
             'companyName' => $this->faker->company() . ' Tech', 
             'contract' => $this->faker->randomElement(['Full-time', 'Part-time', 'Contract', 'Temporary']), 

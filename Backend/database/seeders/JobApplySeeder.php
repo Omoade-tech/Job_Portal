@@ -14,6 +14,6 @@ class JobApplySeeder extends Seeder
     public function run(): void
     {
         // Generate 15 job application records using the factory
-        JobApply::factory()->count(15)->create();
+        JobApply::factory()->count(10)->create();
     }
 }

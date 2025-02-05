@@ -14,6 +14,6 @@ class JobPortalSeeder extends Seeder
     public function run(): void
     {
         // Generate 20 job portal records using the factory
-        JobPortal::factory()->count(20)->create();
+        JobPortal::factory()->count(10)->create();
     }
 }

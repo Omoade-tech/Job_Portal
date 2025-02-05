@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobPortal;
+use App\Models\Employer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 
@@ -45,8 +47,9 @@ class JobPortalController extends Controller
     public function store(Request $request)
     {
         try {
+            // Validate the request data
             $validatedData = $request->validate([
-                'companyLogo' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
+                'companyLogo' => 'file|mimes:jpeg,png,jpg,gif|max:2048',
                 'companyName' => 'required|string|max:255',
                 'contract' => 'required|string|in:fulltime,remote,parttime',
                 'post' => 'required|string|max:100',
@@ -54,19 +57,81 @@ class JobPortalController extends Controller
                 'description' => 'required|string|min:10|max:1000',
                 'location' => 'required|string|max:255',
                 'responsibility' => 'required|string|min:10|max:1000',
+                'employer_id' => 'sometimes|exists:employers,id'
             ]);
 
+            // Get the authenticated user using the request
+            $user = $request->user();
+
+            // Log authentication details for debugging
+            \Log::info('Authentication Debug', [
+                'user_present' => (bool)$user,
+                'user_details' => $user ? [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'role' => $user->role ?? 'No Role'
+                ] : 'No User'
+            ]);
+
+            // Determine the employer_id
+            if ($user) {
+                // If user is an employer, find or create employer record
+                if ($user->role === 'employer') {
+                    $employer = Employer::firstOrCreate(
+                        ['email' => $user->email],
+                        [
+                            'name' => $user->name ?? 'Employer',
+                            'user_id' => $user->id
+                        ]
+                    );
+                    $validatedData['employer_id'] = $employer->id;
+                }
+            }
+
+            // If no employer_id is set, try to use the provided one or throw an error
+            if (!isset($validatedData['employer_id'])) {
+                if ($request->has('employer_id')) {
+                    $validatedData['employer_id'] = $request->input('employer_id');
+                } else {
+                    throw new \Exception('No employer identified. Please provide an employer_id or log in as an employer.');
+                }
+            }
+
+            // Handle file upload for company logo
             if ($request->hasFile('companyLogo')) {
                 $validatedData['companyLogo'] = $request->file('companyLogo')->store('logos', 'public');
             }
 
-            $jobportal = JobPortal::create($validatedData);
+            // Create the job portal entry
+            $jobPortal = JobPortal::create($validatedData);
 
-            return response()->json(['success' => true, 'data' => $jobportal], 201);
-        } catch (ValidationException $e) {
-            return response()->json(['success' => false, 'errors' => $e->errors()], 422);
+            return response()->json([
+                'message' => 'Job portal created successfully',
+                'data' => $jobPortal
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Log validation errors
+            \Log::error('Validation Error', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+
+            return response()->json([
+                'message' => 'Validation Error',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to create JobPortal.', 'error' => $e->getMessage()], 500);
+            // Log any other exceptions
+            \Log::error('Job Portal Creation Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+
+            return response()->json([
+                'message' => 'An error occurred while creating the job portal',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
