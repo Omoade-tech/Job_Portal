@@ -14,44 +14,20 @@ export const useAuthStore = defineStore('auth', () => {
       isLoading.value = true;
       error.value = null;
 
-      const response = await api.login({
-        email: credentials.email,
-        password: credentials.password,
-        rememberMe: credentials.rememberMe
-      });
+      const response = await api.login(credentials);
+      console.log('Auth store login response:', response.data);
 
-      console.log('Complete Login Response:', {
-        user: response.data.user,
-        token: !!response.data.token,
-        employerId: response.data.user?.employer_id || response.data.user?.id
-      });
-
-      if (response.data && response.data.token) {
+      if (response.data) {
         token.value = response.data.token;
-        
-        // Ensure employer ID is captured
-        const userData = {
-          ...response.data.user,
-          employer_id: response.data.user?.employer_id || 
-                       response.data.user?.id || 
-                       (response.data.user?.employer && response.data.user.employer.id)
-        };
+        user.value = response.data.user;
 
-        user.value = userData;
-
-        console.log('Login User Details:', {
-          id: userData.id,
-          email: userData.email,
-          role: userData.role,
-          employerId: userData.employer_id
-        });
-
+        // Store auth data based on remember me
         if (credentials.rememberMe) {
           localStorage.setItem('token', token.value);
-          localStorage.setItem('user', JSON.stringify(userData));
+          localStorage.setItem('user', JSON.stringify(user.value));
         } else {
           sessionStorage.setItem('token', token.value);
-          sessionStorage.setItem('user', JSON.stringify(userData));
+          sessionStorage.setItem('user', JSON.stringify(user.value));
         }
 
         // Set Authorization header
@@ -60,10 +36,9 @@ export const useAuthStore = defineStore('auth', () => {
       }
       throw new Error('Invalid response format');
     } catch (err) {
-      console.error('Login Error Details:', {
+      console.error('Auth store login error:', {
         message: err.message,
-        response: err.response?.data,
-        status: err.response?.status
+        response: err.response?.data
       });
       error.value = err.response?.data?.message || 'Login failed';
       throw err;

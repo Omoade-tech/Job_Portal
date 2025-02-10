@@ -168,12 +168,26 @@ export default {
       this.loading = true;
       this.error = null;
       try {
+      
+        
+
         const response = await api.getJobPortals();
+        console.log('Job portals response:', response);
         this.jobs = response.data.data;
-        this.currentPage = 1; // Reset to first page when fetching new data
-      } catch (error) {
-        this.error = "Failed to load jobs. Please try again.";
-        console.error("Error fetching jobs:", error);
+        this.currentPage = 1;
+  
+        
+        if (error.response?.status === 401) {
+          this.error = "Session expired. Please login again.";
+          // Don't redirect immediately, let the user see the message
+          setTimeout(() => {
+            const authStore = useAuthStore();
+            authStore.logout();
+            this.$router.push('/login');
+          }, 2000);
+        } else {
+          this.error = "Failed to load jobs. Please try again.";
+        }
       } finally {
         this.loading = false;
       }

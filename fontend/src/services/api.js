@@ -7,25 +7,46 @@ export const apiClient = axios.create({
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest'
   },
-  withCredentials: true
+  withCredentials: true // Required for cookies to be sent
 });
+
+// Get CSRF token before making requests
+async function getCsrfToken() {
+  try {
+    await axios.get('http://localhost:8000/sanctum/csrf-cookie', {
+      withCredentials: true
+    });
+  } catch (error) {
+    console.error('Failed to get CSRF token:', error);
+    throw error; // Propagate the error
+  }
+}
 
 // Request interceptor
 apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+  async (config) => {
+    try {
+      // Always get CSRF token for authenticated routes
+      await getCsrfToken();
+      
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log('Token verification:', {
+          exists: true,
+          length: token.length,
+          preview: `${token.substring(0, 10)}...`,
+          url: config.url
+        });
+      }
+      return config;
+    } catch (error) {
+      console.error('Request interceptor error:', error);
+      return Promise.reject(error);
     }
-    console.log('API Request:', {
-      url: config.url,
-      method: config.method,
-      hasToken: !!token
-    });
-    return config;
   },
   (error) => {
-    console.error('Request interceptor error:', error);
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -33,7 +54,7 @@ apiClient.interceptors.request.use(
 // Response interceptor
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('API Response:', {
+    console.log('Response success:', {
       url: response.config.url,
       status: response.status,
       hasData: !!response.data
@@ -42,24 +63,12 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      console.error('API Error Response:', {
+      console.error('API Error:', {
         url: error.config?.url,
         status: error.response.status,
-        data: error.response.data,
-        headers: error.response.headers
+        message: error.response.data?.message,
+        data: error.response.data
       });
-      handleErrorResponse(error.response);
-    } else if (error.request) {
-      console.error('API No Response:', {
-        url: error.config?.url,
-        request: error.request,
-        message: error.message
-      });
-      if (error.code === 'ERR_CONNECTION_REFUSED') {
-        console.error('Backend server is not running or not accessible');
-      }
-    } else {
-      console.error('API Request Setup Error:', error.message);
     }
     return Promise.reject(error);
   }
@@ -103,49 +112,38 @@ function ensureToken() {
 export default {
   // Auth endpoints
   async login(credentials) {
-    console.log('Sending login request');
     try {
       const response = await apiClient.post('/login', credentials);
-      console.log('Full login response:', response.data);
+      console.log('Raw login response:', response.data);
       
-      // Enhanced employer ID extraction
-      const userData = response.data.data || {};
-      const employerId = 
-        userData.employer_id || 
-        userData.model_id || 
-        (userData.role === 'employer' ? userData.id : null);
-
-      console.log('Login Response Details:', {
-        hasToken: !!response.data.token,
-        userData: userData,
-        employerId: employerId,
-        role: userData.role
-      });
+      // Check for token in various possible locations
+      const token = response.data.token || response.data.access_token || response.data.data?.token;
+      const userData = response.data.user || response.data.data;
       
-      // Restructure the response to match our expected format
-      if (response.data.success && response.data.token) {
-        // Augment user data with employer ID
-        userData.employer_id = employerId;
+      if (!token) {
+        throw new Error('No token received from server');
+      }
 
-        // Set the token in API client headers
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-        
-        // Return restructured response
-        return {
-          data: {
-            token: response.data.token,
-            user: userData
-          }
-        };
+      // Store the raw token without 'Bearer' prefix
+      const cleanToken = token.replace('Bearer ', '');
+      localStorage.setItem('token', cleanToken);
+      
+      // Store user data
+      if (userData) {
+        localStorage.setItem('user', JSON.stringify(userData));
       }
       
-      return response;
+      // Set in axios defaults
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${cleanToken}`;
+      
+      return {
+        data: {
+          token: cleanToken,
+          user: userData
+        }
+      };
     } catch (error) {
-      console.error('Login request failed:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
+      console.error('Login failed:', error.response?.data || error.message);
       throw error;
     }
   },

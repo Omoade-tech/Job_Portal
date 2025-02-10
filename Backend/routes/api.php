@@ -14,7 +14,7 @@ Route::get('/user', function (Request $request) {
 Route::get('/job_portals/search', [JobPortalController::class, 'search']);
 Route::apiResource('job_portals', JobPortalController::class);
 
-Route::middleware(['auth:sanctum'])->group(function () {
+// Route::middleware(['auth:sanctum'])->group(function () {
     // Job Application Routes
     Route::get('/job_applies/employer/{employerId}', [JobApplyController::class, 'getApplicationsByEmployer'])
         ->name('job_applies.employer');
@@ -22,7 +22,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('job_applies', JobApplyController::class);
     Route::put('/job_applies/{id}/status', [JobApplyController::class, 'updateStatus'])
         ->name('job_applies.status');
-});
+// });
 
 // Authentication Routes
 Route::post('/register', [AuthController::class, 'register']);
