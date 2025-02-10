@@ -63,15 +63,7 @@ class JobPortalController extends Controller
             // Get the authenticated user using the request
             $user = $request->user();
 
-            // Log authentication details for debugging
-            \Log::info('Authentication Debug', [
-                'user_present' => (bool)$user,
-                'user_details' => $user ? [
-                    'id' => $user->id,
-                    'email' => $user->email,
-                    'role' => $user->role ?? 'No Role'
-                ] : 'No User'
-            ]);
+          
 
             // Determine the employer_id
             if ($user) {
@@ -109,25 +101,8 @@ class JobPortalController extends Controller
                 'message' => 'Job portal created successfully',
                 'data' => $jobPortal
             ], 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // Log validation errors
-            \Log::error('Validation Error', [
-                'errors' => $e->errors(),
-                'request_data' => $request->all()
-            ]);
-
-            return response()->json([
-                'message' => 'Validation Error',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            // Log any other exceptions
-            \Log::error('Job Portal Creation Error', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
-            ]);
-
+        }  catch (\Exception $e) {
+           
             return response()->json([
                 'message' => 'An error occurred while creating the job portal',
                 'error' => $e->getMessage()
